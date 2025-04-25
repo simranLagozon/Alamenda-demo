@@ -1,0 +1,14 @@
+Question,
+List atmost 100 customers ordered by their store id in ascending order.
+Show all salespersons ordered by their total sales year-to-date from highest to lowest.
+Group customers by store and count how many customers are associated with each store.
+Group the sales data by each salesperson and show the total sales quotas assigned to them.
+Group sales data by territory and show the total sales year-to-date for each sales territory.
+Retrieve all sales orders along with the reasons provided for each order.
+List atmost 10 credit cards associated with each person including the card type and number.
+Show the sales quota history for each salesperson including their name and quota details.
+Show me the names of all the stores along with the details of the customers who are associated with each store.
+What reasons were associated with each sales order,
+what is stakeholder relationship commmittee in TCS in docs,
+How does TCS measure the effectiveness of its sustainability initiatives in relation to stakeholder value creation,
+What role do the Board committees play in overseeing TCS's compliance with tax laws and sustainability practices

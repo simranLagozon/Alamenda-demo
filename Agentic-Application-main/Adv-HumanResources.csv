@@ -1,0 +1,7 @@
+Table,Description
+department,"This table contains detailed information about the various departments within the company, including each department's unique ID, name, the group it belongs to, and the date and time when the record was last updated."
+employee,"This table stores comprehensive employee data, including personal information like birth date, gender, marital status, and employment details such as job title, department, salary, hire date, and the date and time when the record was last updated."
+employeedepartmenthistory,"This table tracks the history of department transfers for employees, capturing details about the department, shift, and dates of employment in each department, along with the date and time when the record was last updated."
+employeepayhistory,"This table records the history of changes in employee pay, including the effective date of the pay change, the rate of pay (either salary or hourly), and the frequency of pay, with the date and time when the record was last updated."
+jobcandidate,"This table stores the résumés submitted by job applicants, including details about the job candidate and, if hired, the associated employee information, with the date and time when the record was last updated."
+shift,"This table serves as a lookup for work shifts, detailing each shift's unique ID, name, start time, end time, and the date and time when the record was last updated."

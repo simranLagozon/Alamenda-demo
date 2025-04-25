@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XO | OX</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <!-- <link rel="stylesheet" href="/stats/style2.css" /> -->
+    
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@400;600;700&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+    font-family:"Poppins", serif;
+}
+
+
+:root {
+    /* Dark theme colors */
+    --text-color: #edf3ff;
+    --subheading-color: #97a7ca;
+    --placeholder-color: #c3cdde;
+    --primary-color: #101623;
+    --secondary-color: #283045;
+    --secondary-hover-color: #333e58;
+    --scrollbar-color: #626a7f;
+        --sidebar-width: 250px;
+        --sidebar-collapsed-width: 70px;
+        --text-color: #edf3ff;
+        --secondary-color: #283045;
+        --secondary-hover-color: #333e58;
+    
+}
+
+body {
+    color: var(--text-color);
+    background-color: var(--primary-color);
+}
+
+.container {
+    padding: 32px 0 10px;
+}
+
+.container :where(.app-header, .section-selector, .suggestions, .prompt-wrapper, .disclaimer-text, .chat-results){
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 20px;
+    max-width: 980px;
+}
+.prompt-wrapper{
+  width: 100vw;
+}
+
+/* App header styling*/
+.container .app-header{
+    position: fixed;
+    transform: translateX(25%);
+
+}
+
+.app-header .heading{
+    font-size: 2.5rem;
+    width: fit-content;
+    background: linear-gradient(to right, #1d7efd, #8f6fff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.app-header .sub-heading{
+    font-size: 2.6rem;
+    color: var(--subheading-color);
+    margin-top: -5px;
+}
+
+/* Section selector styling */
+.section-selector {
+    margin-top: 4vh;
+}
+
+.section-dropdown {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.section-dropdown option {
+    background: var(--primary-color);
+    color: var(--text-color);
+}
+
+/* Suggestion list stylings */
+.container .suggestions{
+    display: flex;
+    gap: 15px;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-left: 0%;
+    padding-bottom: 10px;
+    position: fixed;
+    transform: translate(27%, 58%);
+}
+
+.suggestions .suggestions-item {
+    width: 228px;
+    padding: 18px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-radius: 12px;
+    background: var(--secondary-color);
+    transition: 0.3s ease;
+}
+
+.suggestions .suggestions-item:hover {
+    background: var(--secondary-hover-color);
+}
+
+.suggestions .suggestions-item .text{
+    font-size: 1.2rem;
+}
+
+
+/* Prompt container stylings */
+.prompt-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 16px 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 10;
+}
+
+.prompt-container :where(.prompt-wrapper, .prompt-form, .prompt-actions){
+    display: flex;
+    gap: 13px;
+    height: 45px;
+    align-items: center;
+}
+
+.prompt-wrapper .prompt-form {
+    width: 100%;
+    height: 100%;
+    border-radius: 130px;
+    background: var(--secondary-color);
+}
+
+.prompt-form .prompt-input {
+    height: 100%;
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    padding-left: 24px;
+    font-size: 1rem;
+}
+
+.prompt-form .prompt-input::placeholder {
+    color: var(--placeholder-color);
+}
+
+.prompt-wrapper button {
+    width: 56px;
+    height: 100%;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    transition: 0.3s ease;
+}
+
+.prompt-wrapper button:hover {
+    background: var(--secondary-hover-color);
+}
+
+.prompt-form .prompt-actions{
+    gap: 5px;
+    margin-right: 7px;
+}
+
+.prompt-form .prompt-actions button {
+    height: 45px;
+    width: 45px;
+}
+
+.prompt-form #send-prompt-btn {
+    color: #fff;
+    background: #1d7efd;
+    display: none;
+}
+
+.prompt-form .prompt-input:valid ~ .prompt-actions #send-prompt-btn {
+    display: block;
+}
+
+.prompt-form #send-prompt-btn:hover {
+    background: #0264e3;
+}
+
+.prompt-container .disclaimer-text {
+    font-size: 0.8rem;
+    color: var(--placeholder-color);
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* Chat results styling */
+.chat-results {
+    margin-top: 2vh;
+    margin-bottom: 15vh;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 36vh;
+    position: fixed;
+    overflow-y: scroll;
+    bottom: 0px;
+    left: 16%;
+    scrollbar-width: none;
+    padding-right: 2px;
+}
+
+.chat-message {
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--secondary-color);
+    max-width: fit-content;
+    
+}
+
+.user-message {
+    align-self: flex-end;
+    background: #1d7efd;
+}
+
+.ai-message {
+    align-self: flex-start;
+    max-width: 100%; /* Allow full width */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    /* white-space: pre-wrap; */
+    display: inline-block;
+}
+
+
+.chat-results {
+    display: flex;
+    flex-direction: column;
+    margin-top: 250px;
+    align-items: flex-start; /* Ensures AI messages align properly */
+    width: 100%;
+}
+
+
+
+.chat-message {
+    max-width: 100%; /* Adjust to prevent overflow */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    /* white-space: pre-wrap; */
+    display: block; /* Ensures proper wrapping */
+    
+}
+
+
+
+/* Loading indicator */
+.loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto; /* Centers horizontally */
+    width: 100%; /* Ensures it takes the full width */
+    height: 100vh; /* Centers vertically in the viewport */
+}
+
+
+.loading-indicator span {
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background-color: var(--text-color);
+    border-radius: 50%;
+    animation: bounce 1.5s infinite ease-in-out;
+}
+
+.loading-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Table styling */
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.result-table th {
+    background-color: #1d7efd;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.result-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.result-table tr:nth-child(even) {
+    background-color: var(--secondary-color);
+}
+
+.result-table tr:hover {
+    background-color: var(--secondary-hover-color);
+}
+
+/* Pagination controls */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.pagination-controls button {
+    padding: 8px 12px;
+    background: var(--secondary-color);
+    border: none;
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.pagination-controls button:hover {
+    background: var(--secondary-hover-color);
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    margin: 0 10px;
+    align-self: center;
+}
+
+/* Icons for different suggestion types */
+.icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Sidebar Styles */
+/* Ensure the page takes full height */
+/* Sidebar Styles */
+/* Ensure the page takes full height */
+html, body {
+    height: 100%;
+    margin: 0; /* Optional: Remove default margins */
+}
+
+.sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: var(--sidebar-width);
+            background: var(--secondary-color);
+            padding: 20px;
+            transition: width 0.3s ease;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: none;
+
+        }
+
+
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--secondary-hover-color);
+        }
+
+.sidebar.collapsed .new-chat-btn span:last-child {
+    display: none;
+}
+
+.nav-links {
+            list-style: none;
+            padding:600px 0px 0px 10px;
+            margin: 0;
+            flex-grow: 1;
+            
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+         
+        .nav-links li a {
+    pointer-events: auto; /* Ensure it's clickable */
+    display: flex; /* Ensures proper alignment */
+    align-items: center; /* Centers icon and text */
+    text-decoration: none; /* Optional: Remove underline */
+    color: inherit; /* Optional: Inherit text color */
+
+}
+ .nav-links a {
+    pointer-events: auto !important;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+.nav-links a:hover {
+            background-color: var(--secondary-hover-color);
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar.collapsed .link-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .new-chat-btn span:last-child {
+            display: none;
+        }
+ .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid var(--secondary-hover-color);
+        }
+
+        .sidebar-header:hover{
+            cursor: pointer;
+        }
+
+/* Audio recording button */
+#record-audio-btn {
+    position: relative;
+}
+
+#record-audio-btn.recording::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background-color: red;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+
+
+
+/* .nav-links li {
+    margin-bottom: 500px;
+    
+} */
+
+
+.settings-link {
+    position: relative; /* Add this to make the dropdown position relative to this element */
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-top: 520px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.settings-link:hover {
+    background-color: var(--secondary-hover-color);
+}
+
+.settings-link .material-symbols-rounded {
+    margin-right: 15px;
+}
+
+.sidebar.collapsed .link-text {
+    display: none;
+}
+
+/* Position the settings link at the bottom */
+.settings-link:last-child {
+    margin-top: auto; /* Push the last item (Settings) to the bottom */
+    margin-bottom: 40px; /* Remove the bottom margin for the last item */
+}
+
+.hidden {
+    display: none;
+}
+#settings-options {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    padding: 10px;
+    border-radius: 8px;
+    position: absolute;
+    width: 200px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    display: none; /* Hidden by default */
+    z-index: 1000; /* Ensure it's above other elements */
+    top: 100px;
+    left: 0;
+}
+
+#settings-options.show {
+    display: block; /* Shows when toggled */
+}
+
+.follow-up-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--secondary-color);
+    border-radius: 8px;
+    border-left: 4px solid #1d7efd;
+}
+
+.follow-up-container h3 {
+    color: var(--text-color);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.follow-up-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.follow-up-question {
+    padding: 8px 12px;
+    background: var(--secondary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    /* Added border */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border with 10% opacity */
+}
+
+.follow-up-question:hover {
+    background: var(--secondary-hover-color);
+    /* Slightly more visible border on hover */
+    border-color: rgba(255, 255, 255, 0.2);
+}
+/* Add to your existing styles */
+/* Add to your existing styles */
+#add-file-btn {
+    position: relative;
+}
+
+#add-file-btn.disabled {
+    opacity: 0.6;
+    position: relative;
+}
+
+#add-file-btn.disabled::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 2px;
+    background-color: #ff6b6b;
+    transform: translate(-50%, -50%) rotate(45deg);
+    transform-origin: center;
+}
+
+#add-file-btn .tooltip {
+    visibility: hidden;
+    width: 220px; /* Fixed width */
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border: 1px solid #ff6b6b;
+    font-size: 0.8rem;
+    /* Add these properties for text wrapping */
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+#add-file-btn .tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--secondary-color) transparent transparent transparent;
+}
+
+#add-file-btn:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+
+
+
+    </style>
+  </head>
+  <body>
+
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <span class="material-symbols-rounded">menu</span>
+            
+        </div>
+        <a href="#" class="new-chat-btn" id="new-chat-btn">
+            <span class="material-symbols-rounded">Edit</span>
+            <span class="link-text">New Chat</span>
+        </a>
+       
+            
+           
+                <a href="#" class="settings-link" id="settings-link">
+                    <span class="material-symbols-rounded">settings</span>
+                    <span class="link-text">Settings</span>
+                </a>
+
+               
+                <div id="settings-options">
+                    <label><input type="radio" name="settings-option" id="option-intellidoc" value="intellidoc"> Document agent</label><br>
+                    <label><input type="radio" name="settings-option" id="option-db-query" value="db_query">Database agent </label><br>
+                    <label><input type="radio" name="settings-option" id="option-researcher" value="researcher"> Web agent</label><br>
+                    <label><input type="checkbox" id="option-all" value="all"> All</label>
+                </div>
+                
+                
+                
+            
+        
+    </nav>
+
+    <div class="container">
+        <!-- App Header -->
+        <header class="app-header">
+            <h1 class="heading" id="greeting">Hello, there</h1>
+            <h2 class="sub-heading">How Can I help you?</h2>
+        </header>
+
+        <!-- Suggestion List -->
+        <ul class="suggestions" id="suggestions-list"></ul>
+
+        <!-- Prompt Container -->
+        <div class="prompt-container">
+            <div class="prompt-wrapper">
+                <form action="/submit" class="prompt-form" id="prompt-form">
+                    <input
+                        type="text"
+                        name="user_query"
+                        class="prompt-input"
+                        id="prompt-input"
+                        placeholder="Ask me anything..."
+                        required
+                    />
+                    <div class="prompt-actions">
+                        <button id="record-audio-btn" type="button" class="material-symbols-rounded" title="Record Audio">
+                            mic
+                        </button>
+                        <!-- Change this in your HTML -->
+                        <button id="add-file-btn" type="button" class="material-symbols-rounded disabled" title="">
+                            attach_file
+                            <span class="tooltip">Admin Persona to Insert/Delete the documents  
+                                is disabled for "Sandbox-Try it".</span>
+                        </button>
+                        <button id="send-prompt-btn" class="material-symbols-rounded" title="Send">
+                            arrow_upward
+                        </button>
+                    </div>
+                </form>
+
+                <button id="theme-toggler-btn" class="material-symbols-rounded" title="Toggle theme">
+                    light_mode
+                </button>
+            </div>
+            <p class="disclaimer-text">XO can make mistakes, so double-check it</p>
+        </div>
+
+        <!-- Chat Results Container -->
+        <div class="chat-results" id="chat-results"></div>
+    </div>
+
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    // ✅ DOM Elements
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarHeader = document.querySelector(".sidebar-header");
+    const settingsLink = document.getElementById("settings-link");
+    const settingsOptions = document.getElementById("settings-options");
+    const allCheckbox = document.getElementById("option-all");
+    const suggestionsList = document.getElementById("suggestions-list");
+    const promptForm = document.getElementById("prompt-form");
+    const promptInput = document.getElementById("prompt-input");
+    const chatResults = document.getElementById("chat-results");
+    const themeTogglerBtn = document.getElementById("theme-toggler-btn");
+    const deleteChatsBtn = document.getElementById("new-chat-btn");
+    const recordAudioBtn = document.getElementById("record-audio-btn");
+    // Find your file upload button (add this near your other DOM element selections)
+   // Remove any existing click handlers for the file button
+    const addFileBtn = document.getElementById("add-file-btn");
+    if (addFileBtn) {
+        addFileBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            // No action needed since we're just showing the hover tooltip
+        });
+    }
+
+    // ✅ Constants
+
+    // const API_BASE_URL = "http://127.0.0.1:8000";
+    const API_BASE_URL = "https://lz-agenticapplication-ggc6g4a5a0ckhkgm.centralindia-01.azurewebsites.net";
+    let isSubmitting = false;
+        // ✅ Add these at the top with your other constants
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    // ✅ Initialize App
+    const urlParams = new URLSearchParams(window.location.search);
+    const userName = urlParams.get("name");
+    const userSection = urlParams.get("section");
+    
+
+    function setupEventListeners(){
+        deleteChatsBtn.addEventListener("click", function () {
+        chatResults.innerHTML = "";
+    });
+    }
+
+    
+    document.getElementById("option-all").checked = true;
+
+    // Set greeting
+    if (userName) {
+        document.getElementById("greeting").textContent = `Hello, ${userName}`;
+    }
+
+    // ✅ Event Listeners
+    // Sidebar Toggle
+    if (sidebar && sidebarHeader) {
+        sidebarHeader.addEventListener("click", () => sidebar.classList.toggle("collapsed"));
+    }
+
+    // Settings Dropdown
+    if (settingsLink && settingsOptions) {
+        settingsLink.addEventListener("click", function (e) {
+            e.preventDefault();
+            const rect = this.getBoundingClientRect();
+            settingsOptions.style.display = "block";
+            settingsOptions.style.top = `${rect.top - settingsOptions.offsetHeight - 10}px`;
+            settingsOptions.style.left = `${rect.left}px`;
+            settingsOptions.classList.toggle("show");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!settingsLink.contains(e.target) && !settingsOptions.contains(e.target)) {
+                settingsOptions.classList.remove("show");
+                settingsOptions.style.display = "none";
+            }
+        });
+    }
+
+    // Settings Options Handling
+    document.querySelectorAll('input[name="settings-option"]').forEach(option => {
+        option.addEventListener("change", function() {
+            if (this.checked) allCheckbox.checked = false;
+        });
+    });
+
+    allCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+            document.querySelectorAll('input[name="settings-option"]').forEach(option => {
+                option.checked = false;
+            });
+        }
+    });
+
+    
+
+    // Theme Toggler
+    themeTogglerBtn.addEventListener("click", toggleTheme);
+    // Audio Recording
+    recordAudioBtn.addEventListener("click", toggleAudioRecording);
+ 
+
+    // Form Submission
+    promptForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!isSubmitting && promptInput.value.trim()) {
+            await submitQuery(promptInput.value.trim());
+        }
+    });
+
+    
+
+    // ✅ Core Functions
+    // Fetch Questions
+    async function fetchQuestions(section) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/get_questions/?subject=${section}`);
+            const data = await response.json();
+            displaySuggestions(data.questions || []);
+        } catch (error) {
+            console.error("Fetch questions error:", error);
+            displaySuggestions([]);
+        }
+    }
+
+    // Display Suggestions
+    function displaySuggestions(questions) {
+        suggestionsList.innerHTML = "";
+        const colors = ["#1d7efd", "#28a745", "#ffc107", "#6f42c1", "#e91e63", 
+        "#28a745", "#ffc107", "#6f42c1", "#e91e63", "red"]; 
+        const icons = [
+        'draw', 'lightbulb', 'explore', 'list', 'gesture',
+        'rocket_launch', 'psychology', 'auto_awesome', 'hub', 'insights'
+    ];
+
+        questions.slice(0, 10).forEach((question, index) => {
+            const li = document.createElement("li");
+            li.className = "suggestions-item";
+            li.innerHTML = `
+                <p class="text">${question}</p>
+                <span class="material-symbols-rounded" style="color: ${colors[index % colors.length]}">
+                    ${icons[index % icons.length]}
+                </span>
+            `;
+            li.addEventListener("click", () => {
+                promptInput.value = question;
+                promptInput.focus();
+            });
+            suggestionsList.appendChild(li);
+        });
+    }
+
+    // Submit Query
+    async function submitQuery(query) {
+        isSubmitting = true;
+        addMessageToChat("user", query);
+
+        // Clear input field
+        promptInput.value = "";
+
+        // Show loading indicator
+        showLoadingIndicator();
+        
+        try {
+            const formData = new FormData();
+            formData.append("section", userSection);
+            formData.append("user_query", query);
+            formData.append("example_question", "");
+            
+            // Get selected tools
+            const tools = [];
+            if (allCheckbox.checked) {
+                tools.push("all");
+            } else {
+                document.querySelectorAll('input[name="settings-option"]:checked').forEach(option => {
+                    tools.push(option.value);
+                });
+            }
+  
+
+             
+           tools.forEach(tool => formData.append("tool_selected", tool));
+
+            const response = await fetch(`${API_BASE_URL}/submit`, {
+                method: "POST",
+                body: formData,
+                headers: { "Accept": "application/json" }
+            });
+            
+            // removeLoadingIndicator();
+        
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            processResponse(data);
+        } catch (error) {
+            console.error("Submission error:", error);
+            displayErrorMessage("Failed to process your request. Please try again.");
+        } finally {
+            removeLoadingIndicator();
+            isSubmitting = false;
+            promptInput.value = "";
+        }
+    }
+     // Audio Recording Functions
+     async function toggleAudioRecording() {
+        
+
+        if (!mediaRecorder) {
+            // Start recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await transcribeAudio(audioBlob);
+                    recordAudioBtn.classList.remove("recording");
+                };
+                
+                mediaRecorder.start();
+                recordAudioBtn.classList.add("recording");
+            } catch (error) {
+                console.error("Error accessing microphone:", error);
+                alert("Could not access microphone. Please check permissions.");
+            }
+        } else {
+            // Stop recording
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            mediaRecorder = null;
+        }
+    }
+
+    async function transcribeAudio(audioBlob) {
+        showLoadingIndicator();
+        
+        try {
+            const formData = new FormData();
+            formData.append("file", audioBlob, "recording.webm");
+            
+            const response = await fetch(`${API_BASE_URL}/transcribe-audio/`, {
+                method: "POST",
+                body: formData
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            promptInput.value = data.transcription;
+            removeLoadingIndicator();
+        } catch (error) {
+            console.error("Transcription error:", error);
+            displayErrorMessage("Failed to transcribe audio. Please try again.");
+            
+        }finally {
+        removeLoadingIndicator();
+        audioChunks = []; // Clear chunks after processing
+    }
+        
+    }
+
+    
+
+
+    function formatLLMResponse(data) {
+    const container = document.createElement("div");
+    container.classList.add("search-result");
+
+    // Remove "Search Results" if present
+    data = data.replace(/^Search Results\s*/, "");
+
+    // Extract sections dynamically
+    const sourceMatch = data.match(/Source\s*:\s*([\s\S]*?)(Related Quer(y|ies):|$)/s);
+    const relatedQueryMatch = data.match(/Related Quer(y|ies):\s*([\s\S]*?)(Source:|$)/s);
+
+    let responseText = data.split(/Related Quer(y|ies):|Source:/)[0].trim(); // Extracts main response before "Related Query/Queries" or "Source"
+    let sourceText = sourceMatch ? sourceMatch[1].trim() : "";
+    let relatedQueriesText = relatedQueryMatch ? relatedQueryMatch[2].trim() : "";
+
+    // Format bold text (convert **bold** to <strong>bold</strong>)
+    responseText = responseText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+    // Format main response
+    if (responseText) {
+        const responseDiv = document.createElement("div");
+        responseDiv.classList.add("response-section");
+        responseDiv.innerHTML = `<p>${responseText.replace(/\n/g, "<br>")}</p>`;
+        container.appendChild(responseDiv);
+    }
+
+    // Format source section (Display Source First)
+    if (sourceText) {
+        const sourceDiv = document.createElement("div");
+        sourceDiv.classList.add("source-section");
+        sourceDiv.innerHTML = `<h3><strong>Source</strong></h3><p>${sourceText.replace(/\n/g, "<br>")}</p>`;
+        container.appendChild(sourceDiv);
+    }
+
+
+ 
+
+    return container.innerHTML;
+}
+
+ 
+
+
+function processResponse(data) {
+    console.log("Full response data with follow-ups:", {
+        ...data,
+        follow_up_questions: data.follow_up_questions || {}
+    });
+
+    if (data.error) {
+        displayErrorMessage(data.error);
+        return;
+    }
+
+    if (data.search_results) {
+        const formattedResponse = formatLLMResponse(data.search_results);
+        addMessageToChat("ai", formattedResponse);
+    }
+
+    if (data.query) {
+        addMessageToChat("ai", `Generated SQL: <pre>${data.query}</pre>`);
+    }
+
+    if (data.tables?.length > 0) {
+        data.tables.forEach(table => addTableToChat(table.table_html));
+    }
+
+    // Debug follow-ups more thoroughly
+    const hasFollowUps = data.follow_up_questions && Object.keys(data.follow_up_questions).length > 0;
+    console.log("Has follow-up questions?", hasFollowUps, "Content:", data.follow_up_questions);
+    
+    if (hasFollowUps) {
+        console.log("Adding follow-up questions:", data.follow_up_questions);
+        addFollowUpQuestions(data.follow_up_questions);
+    }
+}
+
+function addFollowUpQuestions(followUps) {
+    console.log("Adding follow-up questions:", followUps); // Debugging
+    const followUpContainer = document.createElement("div");
+    followUpContainer.className = "follow-up-container";
+    
+    const title = document.createElement("h3");
+    title.textContent = "Suggested Follow-up Questions";
+    title.style.marginTop = "20px";
+    title.style.marginBottom = "10px";
+    title.style.color = "#1d7efd";
+    followUpContainer.appendChild(title);
+    
+    const questionsList = document.createElement("div");
+    questionsList.className = "follow-up-questions";
+    
+    Object.entries(followUps).forEach(([key, question]) => {
+        if (question && question.trim()) {
+            const questionElement = document.createElement("div");
+            questionElement.className = "follow-up-question";
+            questionElement.textContent = question;
+            questionElement.style.cursor = "pointer";
+            questionElement.style.padding = "8px 12px";
+            questionElement.style.margin = "5px 0";
+            questionElement.style.borderRadius = "4px";
+            questionElement.style.backgroundColor = "var(--secondary-color)";
+            questionElement.style.transition = "background-color 0.3s";
+            
+            questionElement.addEventListener("mouseover", () => {
+                questionElement.style.backgroundColor = "var(--secondary-hover-color)";
+            });
+            
+            questionElement.addEventListener("mouseout", () => {
+                questionElement.style.backgroundColor = "var(--secondary-color)";
+            });
+            
+            questionElement.addEventListener("click", () => {
+                promptInput.value = question;
+                promptInput.focus();
+            });
+            
+            questionsList.appendChild(questionElement);
+        }
+    });
+    
+    followUpContainer.appendChild(questionsList);
+    chatResults.appendChild(followUpContainer);
+    window.scrollTo(0, document.body.scrollHeight);
+}
+
+    // Table Handling
+    function addTableToChat(tableHTML) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(tableHTML, "text/html");
+        const table = doc.querySelector("table");
+        
+
+        if (!table) return;
+
+        doc.querySelectorAll("style").forEach(el => el.remove());
+
+        // Remove any auto-generated ID and class names (like T_bad56)
+        table.removeAttribute("id");
+        table.classList.add("result-table"); // Apply custom CSS class
+
+        // Clean table
+        table.querySelectorAll("th.blank, td.index_col").forEach(el => el.remove());
+        
+        table.querySelectorAll("th.row_heading").forEach(el => el.remove());
+        
+        // Create paginated table
+        const rows = Array.from(table.querySelectorAll("tbody tr"));
+        const rowsPerPage = 5;
+        let currentPage = 1;
+
+        const tableContainer = document.createElement("div");
+        tableContainer.className = "table-container";
+        
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-wrapper";
+        
+        const pagination = document.createElement("div");
+        pagination.className = "pagination-controls";
+        
+        const prevBtn = createPaginationButton("←", () => changePage(-1));
+        const nextBtn = createPaginationButton("→", () => changePage(1));
+        
+        pagination.append(prevBtn, nextBtn);
+        wrapper.append(table, pagination);
+        tableContainer.append(wrapper);
+        
+        chatResults.appendChild(tableContainer);
+        renderTable();
+
+        function renderTable() {
+            const tbody = table.querySelector("tbody");
+            tbody.innerHTML = "";
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            rows.slice(start, end).forEach(row => tbody.appendChild(row));
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = end >= rows.length;
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderTable();
+        }
+    }
+
+
+    // Helper Functions
+    function addMessageToChat(role, content) {
+    console.log("addMessageToChat called with role:", role, "and content:", content); // Debugging: Log the function call and parameters
+
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `chat-message ${role}-message`;
+    messageDiv.innerHTML = content;
+
+    console.log("Message Div Created:", messageDiv); // Debugging: Log the created message div
+
+    const chatResults = document.getElementById("chat-results");
+    if (chatResults) {
+        chatResults.appendChild(messageDiv);
+        console.log("Message Div Appended to Chat Results"); // Debugging: Log the successful append
+    } else {
+        console.error("Chat Results container not found!"); // Debugging: Log an error if the container is missing
+    }
+
+    window.scrollTo(0, document.body.scrollHeight);
+    console.log("Page Scrolled to Bottom"); // Debugging: Log the scroll action
+}
+    function showLoadingIndicator() {
+        const loader = document.createElement("div");
+        loader.className = "loading-indicator";
+        loader.innerHTML = '<span></span><span></span><span></span>';
+        chatResults.appendChild(loader);
+    }
+
+    function removeLoadingIndicator() {
+        const loader = document.querySelector(".loading-indicator");
+        if (loader) loader.remove();
+    }
+
+    function displayErrorMessage(message) {
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "chat-message error-message";
+        errorDiv.textContent = message;
+        chatResults.appendChild(errorDiv);
+    }
+
+    function createPaginationButton(text, onClick) {
+        const btn = document.createElement("button");
+        btn.innerHTML = text;
+        btn.addEventListener("click", onClick);
+        return btn;
+    }
+
+    function toggleTheme() {
+        const root = document.documentElement;
+        const isDarkTheme = getComputedStyle(root).getPropertyValue('--primary-color').trim() === '#101623';
+
+        if (isDarkTheme) {
+            // Switch to light theme
+            root.style.setProperty('--text-color', '#333333');
+            root.style.setProperty('--subheading-color', '#555555');
+            root.style.setProperty('--placeholder-color', '#777777');
+            root.style.setProperty('--primary-color', '#ffffff');
+            root.style.setProperty('--secondary-color', '#f0f0f0');
+            root.style.setProperty('--secondary-hover-color', '#e0e0e0');
+            root.style.setProperty('--scrollbar-color', '#cccccc');
+            themeTogglerBtn.textContent = 'dark_mode';
+        } else {
+            // Switch to dark theme
+            root.style.setProperty('--text-color', '#edf3ff');
+            root.style.setProperty('--subheading-color', '#97a7ca');
+            root.style.setProperty('--placeholder-color', '#c3cdde');
+            root.style.setProperty('--primary-color', '#101623');
+            root.style.setProperty('--secondary-color', '#283045');
+            root.style.setProperty('--secondary-hover-color', '#333e58');
+            root.style.setProperty('--scrollbar-color', '#626a7f');
+            themeTogglerBtn.textContent = 'light_mode';
+        }
+    }
+   
+    themeTogglerBtn.addEventListener('click', toggleTheme);
+    
+
+  
+
+    // Initial Load
+    if (userSection) {
+        fetchQuestions(userSection);
+        setupEventListeners();
+    } else {
+        displayErrorMessage("No section selected! Please log in again.");
+    }
+
+
+    
+
+});
+
+
+
+      
+    </script>
+  </body>
+</html> 
