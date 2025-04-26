@@ -1,0 +1,11 @@
+Table,Description
+scrapreason,"This table stores the reasons for manufacturing failures, providing a reference for improving production processes and quality control."  
+transactionhistoryarchive,"This table serves as an archive for transaction history records, maintaining historical data for data integrity and reporting needs."  
+workorder,"This table records manufacturing work orders, including product IDs, order quantities, scheduled and actual start/end dates, resource hours, and costs."  
+workorderrouting,"This table details work order processes, including operation sequences, manufacturing locations, resource hours, planned and actual costs, and relevant work order IDs."  
+transactionhistory,"This table contains records of each purchase order, sales order, or work order transaction year to date, including transaction dates, types, quantities, actual costs, and reference order IDs."
+product,"This table contains information about products sold or used in the manufacturing of sold products, including product IDs, names, product numbers, flags for manufacturing and salability, costs, inventory levels, and associated categories and models."
+location,"This table stores information about product inventory and manufacturing locations, including location IDs, descriptions, cost rates, work capacities, and timestamps for record updates."  
+productioncosthistory,"This table tracks changes in the cost of products over time, capturing cost fluctuations and historical pricing data."  
+billofmaterials,"This table contains items required to create bicycles and bicycle subassemblies, including hierarchical relationships between parent products and their components." 
+unitmeasure,"This table is a lookup for unit of measure, containing unit measure codes and descriptions, along with timestamps for when records were last updated."

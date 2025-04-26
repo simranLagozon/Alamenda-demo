@@ -1,0 +1,7 @@
+Table,Description
+product,"This table stores information about the products, including the product ID, name, and product number."
+productsubcategory,"This table stores information about the subcategories associated with products, including the product subcategory ID."
+productinventory,"This table tracks the inventory of products, including the product ID, location ID, shelf, bin, and quantity for each product."
+location,"This table stores information about the locations where products are stored, including the location ID, name, cost rate, and availability."
+
+
