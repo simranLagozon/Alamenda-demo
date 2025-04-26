@@ -337,7 +337,7 @@ def intellidoc_node(state: GraphState) -> dict:
 # Define Node Functions
 def extract_tables(data: GraphState) -> dict:
     question = data['question']
-    selected_subject = data.get('selected_subject', 'Adv-HumanResources')
+    selected_subject = data.get('selected_subject', 'Adv-Manufacturing')
     llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
 
     table_details = get_table_details(selected_subject)
