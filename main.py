@@ -177,13 +177,13 @@ async def login(
         user_id, full_name, role_name = user
 
         # Redirect based on role
-        if role_name == "reg-admin" or role_name == "audit-admin"::
+        if role_name == "reg-admin" or role_name == "audit-admin":
             encoded_name = quote(full_name)
             encoded_section = quote(section)
             # return RedirectResponse(url=f"/admin?section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
             return RedirectResponse(url=f"/role-select?name={encoded_name}&section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
             
-        elif role_name == "reg-user" or role_name=="audit-user"::
+        elif role_name == "reg-user" or role_name=="audit-user":
             # Use urllib.parse.quote to encode full_name and section
             encoded_name = quote(full_name)
             encoded_section = quote(section)
