@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark theme colors */
+            --text-color: #edf3ff;
+            --subheading-color: #97a7ca;
+            --placeholder-color: #c3cdde;
+            --primary-color: #101623;
+            --secondary-color: #283045;
+            --secondary-hover-color: #333e58;
+            --scrollbar-color: #626a7f;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+            --accent-color: #1d7efd;
+            --accent-hover: #0264e3;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --error-color: #ff4d4f;
+            --error-bg: #fff1f0;
+        }
+
+        /* Light theme colors */
+        [data-theme="light"] {
+            --text-color: #101623;
+            --subheading-color: #4a5568;
+            --placeholder-color: #718096;
+            --primary-color: #f7fafc;
+            --secondary-color: #e2e8f0;
+            --secondary-hover-color: #cbd5e0;
+            --scrollbar-color: #a0aec0;
+            --accent-color: #1d7efd;
+            --accent-hover: #0264e3;
+            --error-color: #ff4d4f;
+            --error-bg: #fff1f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            background-color: var(--primary-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 2rem; /* Added reasonable padding */
+        }
+
+        .welcome-container {
+    text-align: center;
+    margin: 0 auto; /* Changed from margin-bottom: 3rem */
+    max-width: 800px;
+    padding-top: 1rem; /* Reduced top padding */
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem; /* Reduced from 1rem */
+    background: linear-gradient(to right, #1d7efd, #8f6fff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.welcome-subtitle {
+    font-size: 1.25rem;
+    color: var(--subheading-color);
+    margin-bottom: 1rem; /* Reduced from 2rem */
+    line-height: 1.6;
+}
+
+.role-cards {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem; /* Reduced from 2rem */
+    flex-wrap: wrap;
+    width: 100%;
+    margin-top: 1.5rem; /* Added to control space after subtitle */
+}
+        .role-cards {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .role-card {
+            background: var(--secondary-color);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 300px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+            background: var(--secondary-hover-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .role-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            background: linear-gradient(135deg, #1d7efd, #8f6fff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .role-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .role-description {
+            color: var(--subheading-color);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .role-button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .role-button:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Button container styles */
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1rem 0;
+            width: 100%;
+        }
+
+        /* Unified button styles */
+        .back-button, .theme-toggle {
+            background: var(--secondary-color);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover, .theme-toggle:hover {
+            background: var(--secondary-hover-color);
+        }
+
+        .back-button .material-icons-round, 
+        .theme-toggle .material-icons-round {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        /* Error message styles */
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .error-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .error-icon {
+            color: var(--error-color);
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        .error-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--error-color);
+            margin: 0;
+        }
+
+        .error-content {
+            color: #333;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .error-close {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-close:hover {
+            opacity: 0.9;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -55%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .welcome-title {
+                font-size: 2rem;
+            }
+            
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+            
+            .role-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .role-card {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="button-container">
+            <button class="back-button" id="backButton">
+                <span class="material-icons-round">arrow_back</span>
+            </button>
+            <button class="theme-toggle" id="themeToggle">
+                <span class="material-icons-round theme-icon">dark_mode</span>
+            </button>
+        </div>
+    
+        <div class="welcome-container">
+            <h1 class="welcome-title">Hello Admin, how would you like to login today?</h1>
+            <p class="welcome-subtitle"></p>
+            
+            <div class="role-cards">
+                <div class="role-card" id="adminCard">
+                    <span class="material-icons-round role-icon">admin_panel_settings</span>
+                    <h3 class="role-title">Admin Dashboard</h3>
+                    <p class="role-description">Access the full administrative interface with system controls, user management, and advanced analytics.</p>
+                    <button class="role-button">Enter as Admin</button>
+                </div>
+                
+                <div class="role-card" id="userCard">
+                    <span class="material-icons-round role-icon">person</span>
+                    <h3 class="role-title">User Interface</h3>
+                    <p class="role-description">Switch to the standard user interface with simplified controls and standard features.</p>
+                    <button class="role-button">Enter as User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error message overlay and box -->
+    <div class="overlay" id="errorOverlay"></div>
+    <div class="error-message" id="errorMessage">
+        <div class="error-header">
+            <span class="material-icons-round error-icon">error</span>
+            <h3 class="error-title">Access Denied</h3>
+        </div>
+        <div class="error-content">
+          Admin Persona to Insert/Delete the documents is disabled for "Sandbox-Try it Yourself" instance.
+        </div>
+        <button class="error-close" id="errorClose">OK</button>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        
+        // Check for saved theme preference or use preferred color scheme
+        const savedTheme = localStorage.getItem('theme') || 
+                           (window.matchMedia('(prefers-color-scheme: light)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Update icon based on current theme
+        if (savedTheme === 'light') {
+            themeIcon.textContent = 'dark_mode';
+        } else {
+            themeIcon.textContent = 'light_mode';
+        }
+        
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            if (newTheme === 'light') {
+                themeIcon.textContent = 'dark_mode';
+            } else {
+                themeIcon.textContent = 'light_mode';
+            }
+        });
+        
+        // Get parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name') || 'Admin';
+        const section = urlParams.get('section') || '';
+        
+        // Update welcome message with decoded name
+        document.querySelector('.welcome-title').textContent = `Hello ${decodeURIComponent(name)}, how would you like to login today?`;
+        
+        // Error message elements
+        const errorMessage = document.getElementById('errorMessage');
+        const errorOverlay = document.getElementById('errorOverlay');
+        const errorClose = document.getElementById('errorClose');
+        
+        // Function to show error message
+        function showError() {
+            errorMessage.classList.add('show');
+            errorOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Function to hide error message
+        function hideError() {
+            errorMessage.classList.remove('show');
+            errorOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // Close error message when clicking close button or overlay
+        errorClose.addEventListener('click', hideError);
+        errorOverlay.addEventListener('click', hideError);
+        
+        // Set up click handlers for both the cards and their buttons
+        function setupCardClickHandler(cardId, route) {
+            const card = document.getElementById(cardId);
+            const button = card.querySelector('.role-button');
+            
+            const handler = () => {
+                if (cardId === 'adminCard') {
+                    showError();
+                } else {
+                    window.location.href = `/${route}?name=${encodeURIComponent(name)}&section=${encodeURIComponent(section)}`;
+                }
+            };
+            
+            card.addEventListener('click', handler);
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event bubbling to avoid double execution
+                handler();
+            });
+        }
+
+        document.getElementById('backButton').addEventListener('click', () => {
+            window.history.back();
+        });
+        
+        
+        // Setup handlers for both cards
+        setupCardClickHandler('adminCard', 'admin');
+        setupCardClickHandler('userCard', 'user_client');
+    </script>
+</body>
+</html>
