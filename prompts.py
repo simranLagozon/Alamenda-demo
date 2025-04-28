@@ -48,3 +48,10 @@ Here are three relevant follow-up questions:
 3. {follow_up_3}
 """
 )
+
+insight_prompt = """Based on the following query results, provide a useful insight:
+  Query: {sql_query}
+  Data :
+  {table_data}
+  Give a 2 liner concise response about the whole data .
+  """
