@@ -110,6 +110,7 @@ body {
     scrollbar-width: none;
     padding-left: 0%;
     padding-bottom: 10px;
+    padding-top: 30px;
     position: fixed;
     transform: translate(27%, 58%);
 }
@@ -1031,7 +1032,8 @@ function processResponse(data) {
     }
 
     if (data.query) {
-        addMessageToChat("ai", `Generated SQL: <pre>${data.query}</pre>`);
+        addMessageToChat("ai", `Generated SQL: <pre>${data.query}</pre><br> Insights: ${data.chat_insight}`);
+
     }
 
     if (data.tables?.length > 0) {
