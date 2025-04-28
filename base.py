@@ -247,8 +247,10 @@ def intellidoc_tool(department: str, query_text: str):
             # "insurance": 5,
             # "learning_and_development": 6,
             # "others": 7
-            "Adv-Manufacturing":0,
-            "Adv-Inventory":1,
+            # "Adv-Manufacturing":0,
+            # "Adv-Inventory":1,
+            "Regulatory":0,
+            "Audit":1
            
         }
         department_index = DEPARTMENT_TO_INDEX.get(department)
