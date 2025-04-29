@@ -186,13 +186,12 @@ def get_db_connection():
 get_db_connection()
 
 # Login endpoint
+# Login endpoint
 @app.post("/login")
 async def login(
     email: str = Form(...),
     password: str = Form(...),
     section: str = Form(...),
-
-    
 ):
     if not email or not password or not section:
         raise HTTPException(
@@ -224,23 +223,30 @@ async def login(
             )
 
         user_id, full_name, role_name = user
-        print(full_name)
+
+        # Validate department access
+        if (role_name in ["reg-admin", "reg-user"] and section != "Regulatory") or \
+           (role_name in ["audit-admin", "audit-user"] and section != "Audit"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to access this department"
+            )
 
         # Redirect based on role
-        if role_name == "reg-admin" or role_name == "audit-admin":
+        if role_name in ["reg-admin", "audit-admin"]:
+            encoded_name = quote(full_name)
             encoded_section = quote(section)
-            # return RedirectResponse(url=f"/admin?section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
-            return RedirectResponse(url=f"/role-select?name={full_name}&section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
-            
-        elif role_name == "reg-user" or role_name=="audit-user":
-            # Use urllib.parse.quote to encode full_name and section
+            return RedirectResponse(url=f"/role-select?name={encoded_name}&section={encoded_section}",
+                                 status_code=status.HTTP_303_SEE_OTHER)
+
+        elif role_name in ["reg-user", "audit-user"]:
             encoded_name = quote(full_name)
             encoded_section = quote(section)
             return RedirectResponse(
                 url=f"/user_more?name={encoded_name}&section={encoded_section}",
                 status_code=status.HTTP_303_SEE_OTHER
             )
-    
+
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
