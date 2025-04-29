@@ -1298,59 +1298,100 @@ body {
                 tableContainer.insertAdjacentElement("afterend", buttonsContainer);
             }
         }
-    
         function createVisualizationPanel(uniqueId) {
-            // Clear existing content
-            visualizationPanel.innerHTML = `
-                <div class="visualization-header">
-                    <h2>Data Visualization: ${uniqueId.split('-')[0]}</h2>
-                    <button class="close-visualization material-symbols-rounded">close</button>
-                </div>
-                <div class="visualization-content" id="visualization-content"></div>
-            `;
-            
-            const closeBtn = visualizationPanel.querySelector(".close-visualization");
-            closeBtn.addEventListener("click", () => {
-                visualizationPanel.classList.remove("visible");
-                overlay.classList.remove("visible");
-            });
-            
-            // Add only the specified table to the visualization panel
-            const table = currentTables.find(t => t.uniqueId === uniqueId);
-            if (table) {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(table.html, "text/html");
-                const tableElement = doc.querySelector("table");
-                
-                // Remove the index column (first column)
-                const rows = tableElement.querySelectorAll('tr');
-                rows.forEach(row => {
-                    // Remove first cell (td or th) in each row
-                    const firstCell = row.querySelector('th, td');
-                    if (firstCell) {
-                        row.removeChild(firstCell);
-                    }
-                });
-                
-                // Create the same container structure as main tables
-                const tableContainer = document.createElement("div");
-                tableContainer.className = "table-container";
-                
-                const wrapper = document.createElement("div");
-                wrapper.className = "table-wrapper";
-                
-                // Clone the table and maintain its classes
-                const clonedTable = tableElement.cloneNode(true);
-                clonedTable.classList.add("result-table"); // Ensure class is added
-                
-                wrapper.appendChild(clonedTable);
-                tableContainer.appendChild(wrapper);
-                
-                const visualizationContent = document.getElementById("visualization-content");
-                visualizationContent.appendChild(tableContainer);
-                addChartControlsToPanel(uniqueId);
+    // Clear existing content
+    visualizationPanel.innerHTML = `
+        <div class="visualization-header">
+            <h2>Data Visualization: ${uniqueId.split('-')[0]}</h2>
+            <button class="close-visualization material-symbols-rounded">close</button>
+        </div>
+        <div class="visualization-content" id="visualization-content"></div>
+    `;
+    
+    const closeBtn = visualizationPanel.querySelector(".close-visualization");
+    closeBtn.addEventListener("click", () => {
+        visualizationPanel.classList.remove("visible");
+        overlay.classList.remove("visible");
+    });
+    
+    // Add only the specified table to the visualization panel
+    const table = currentTables.find(t => t.uniqueId === uniqueId);
+    if (table) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(table.html, "text/html");
+        const tableElement = doc.querySelector("table");
+        
+        // Remove the index column (first column)
+        const rows = tableElement.querySelectorAll('tr');
+        rows.forEach(row => {
+            // Remove first cell (td or th) in each row
+            const firstCell = row.querySelector('th, td');
+            if (firstCell) {
+                row.removeChild(firstCell);
             }
-        }
+        });
+        
+        // Create the same container structure as main tables
+        const tableContainer = document.createElement("div");
+        tableContainer.className = "table-container";
+        tableContainer.id = `visualization-table-container-${uniqueId}`;
+        
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-wrapper";
+        
+        // Clone the table and maintain its classes
+        const clonedTable = tableElement.cloneNode(true);
+        clonedTable.classList.add("result-table"); // Ensure class is added
+        
+        wrapper.appendChild(clonedTable);
+        tableContainer.appendChild(wrapper);
+        
+        const visualizationContent = document.getElementById("visualization-content");
+        visualizationContent.appendChild(tableContainer);
+        
+        // Add pagination to the visualization panel table
+        addPaginationToVisualizationTable(uniqueId, clonedTable);
+        addChartControlsToPanel(uniqueId);
+    }
+}
+
+function addPaginationToVisualizationTable(uniqueId, table) {
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+    const rowsPerPage = 5;
+    let currentPage = 1;
+
+    const pagination = document.createElement("div");
+    pagination.className = "pagination-controls";
+
+    const prevBtn = createPaginationButton("←", () => changePage(-1));
+    const nextBtn = createPaginationButton("→", () => changePage(1));
+    const pageInfo = document.createElement("span");
+    pageInfo.className = "pagination-info";
+
+    pagination.append(prevBtn, pageInfo, nextBtn);
+    
+    // Insert pagination after the table
+    table.insertAdjacentElement("afterend", pagination);
+
+    renderTable();
+
+    function renderTable() {
+        const tbody = table.querySelector("tbody");
+        tbody.innerHTML = "";
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        rows.slice(start, end).forEach(row => tbody.appendChild(row));
+
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = end >= rows.length;
+        pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(rows.length / rowsPerPage)}`;
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        renderTable();
+    }
+}
     
         async function addChartControlsToPanel(uniqueId) {
             const chartContainer = document.createElement("div");
