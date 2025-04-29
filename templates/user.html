@@ -8,8 +8,6 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
     />
-    <!-- <link rel="stylesheet" href="/stats/style2.css" /> -->
-
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@400;600;700&display=swap');
 
@@ -35,37 +33,43 @@
         --text-color: #edf3ff;
         --secondary-color: #283045;
         --secondary-hover-color: #333e58;
-
 }
 
 body {
     color: var(--text-color);
     background-color: var(--primary-color);
+    overflow-x: hidden;
 }
 
 .container {
     padding: 32px 0 10px;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
 }
 
-.container :where(.app-header, .section-selector, .suggestions, .prompt-wrapper, .disclaimer-text, .chat-results){
+.sidebar.collapsed ~ .container {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+.container :where(.app-header, .section-selector, .suggestions-container, .prompt-wrapper, .disclaimer-text, .chat-results){
     margin: 0 auto;
     width: 100%;
     padding: 0 20px;
-    max-width: 980px;
+    max-width: 800px;
 }
-.prompt-wrapper{
+/* .prompt-wrapper{
   width: 100vw;
-}
+} */
 
 /* App header styling*/
 .container .app-header{
-    position: fixed;
-    transform: translateX(25%);
 
+    position: relative;
+    margin-bottom: 20px;
 }
 
 .app-header .heading{
-    font-size: 2.5rem;
+    font-size: 2rem;
     width: fit-content;
     background: linear-gradient(to right, #1d7efd, #8f6fff);
     background-clip: text;
@@ -74,45 +78,34 @@ body {
 }
 
 .app-header .sub-heading{
-    font-size: 2.6rem;
+    font-size: 1.5rem;
     color: var(--subheading-color);
     margin-top: -5px;
 }
-
-/* Section selector styling */
-.section-selector {
-    margin-top: 4vh;
-}
-
-.section-dropdown {
+.container .suggestions-container {
+    margin-bottom: 20px;
+    padding: 0 20px;
+    max-width: 800px;
     width: 100%;
-    padding: 12px 16px;
-    border-radius: 8px;
-    background: var(--secondary-color);
-    color: var(--text-color);
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-    outline: none;
 }
-
-.section-dropdown option {
-    background: var(--primary-color);
-    color: var(--text-color);
-}
-
-/* Suggestion list stylings */
-.container .suggestions{
+/* Suggestions container stylings */
+.suggestions {
     display: flex;
     gap: 15px;
     list-style: none;
     overflow-x: auto;
+    padding: 15px 0;
     scrollbar-width: none;
-    padding-left: 0%;
-    padding-bottom: 10px;
-    padding-top: 30px;
-    position: fixed;
-    transform: translate(27%, 58%);
+    scrollbar-color: var(--scrollbar-color) var(--primary-color);
+}
+
+.suggestions::-webkit-scrollbar {
+    height: 6px;
+}
+
+.suggestions::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-color);
+    border-radius: 3px;
 }
 
 .suggestions .suggestions-item {
@@ -128,30 +121,25 @@ body {
     background: var(--secondary-color);
     transition: 0.3s ease;
 }
-
-.suggestions .suggestions-item:hover {
-    background: var(--secondary-hover-color);
-}
-
-.suggestions .suggestions-item .text{
-    font-size: 1.2rem;
-}
-
-
 /* Prompt container stylings */
 .prompt-container {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: var(--sidebar-width);
+    right: 0;
     padding: 16px 0;
-    background: rgba(0, 0, 0, 0);
+    background: var(--primary-color);
     z-index: 10;
+    transition: left 0.3s ease;
+}
+
+.sidebar.collapsed ~ .container .prompt-container {
+    left: var(--sidebar-collapsed-width);
 }
 
 .prompt-container :where(.prompt-wrapper, .prompt-form, .prompt-actions){
     display: flex;
-    gap: 13px;
+    gap: 10px;
     height: 45px;
     align-items: center;
 }
@@ -170,8 +158,8 @@ body {
     border: none;
     outline: none;
     color: var(--text-color);
-    padding-left: 24px;
-    font-size: 1rem;
+    padding-left: 20px;
+    font-size: 0.95rem;
 }
 
 .prompt-form .prompt-input::placeholder {
@@ -179,12 +167,12 @@ body {
 }
 
 .prompt-wrapper button {
-    width: 56px;
-    height: 100%;
+    width: 45px;
+    height: 45px;
     border: none;
     cursor: pointer;
     border-radius: 50%;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     color: var(--text-color);
     background: var(--secondary-color);
     transition: 0.3s ease;
@@ -219,7 +207,7 @@ body {
 }
 
 .prompt-container .disclaimer-text {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--placeholder-color);
     margin-top: 8px;
     text-align: center;
@@ -227,78 +215,49 @@ body {
 
 /* Chat results styling */
 .chat-results {
-    margin-top: 2vh;
+    margin-top: 20px;
     margin-bottom: 15vh;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    max-height: 36vh;
-    position: fixed;
-    overflow-y: scroll;
-    bottom: 0px;
-    left: 16%;
+    gap: 15px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-right: 10px;
     scrollbar-width: none;
-    padding-right: 2px;
+    width: 100%;
 }
 
 .chat-message {
-    padding: 16px;
-    border-radius: 12px;
-    background: var(--secondary-color);
-    max-width: fit-content;
-
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    max-width: 90%;
+    word-wrap: break-word;
 }
 
 .user-message {
     align-self: flex-end;
     background: #1d7efd;
+    color: white;
 }
 
 .ai-message {
     align-self: flex-start;
-    max-width: 100%; /* Allow full width */
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    /* white-space: pre-wrap; */
-    display: inline-block;
+    background: var(--secondary-color);
 }
-
-
-.chat-results {
-    display: flex;
-    flex-direction: column;
-    margin-top: 250px;
-    align-items: flex-start; /* Ensures AI messages align properly */
-    width: 100%;
-}
-
-
-
-.chat-message {
-    max-width: 100%; /* Adjust to prevent overflow */
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    /* white-space: pre-wrap; */
-    display: block; /* Ensures proper wrapping */
-
-}
-
-
 
 /* Loading indicator */
 .loading-indicator {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px auto; /* Centers horizontally */
-    width: 100%; /* Ensures it takes the full width */
-    height: 100vh; /* Centers vertically in the viewport */
+    margin: 20px 0;
+    width: 100%;
 }
 
-
 .loading-indicator span {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     margin: 0 5px;
     background-color: var(--text-color);
     border-radius: 50%;
@@ -318,9 +277,39 @@ body {
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-8px);
     }
 }
+
+/* Table styling
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.9rem;
+}
+
+.result-table th {
+    background-color: #1d7efd;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+.result-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.result-table tr:nth-child(even) {
+    background-color: var(--secondary-color);
+}
+
+.result-table tr:hover {
+    background-color: var(--secondary-hover-color);
+} */
 
 /* Table styling */
 .result-table {
@@ -329,6 +318,7 @@ body {
     margin: 20px 0;
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid var(--table-border-color, rgba(0, 0, 0, 0.1)); /* Default light mode border */
 }
 
 .result-table th {
@@ -336,11 +326,22 @@ body {
     color: white;
     padding: 12px;
     text-align: left;
+    border-bottom: 2px solid var(--table-border-color, rgba(0, 0, 0, 0.15));
 }
 
 .result-table td {
     padding: 10px;
-    border-bottom: 1px solid var(--secondary-color);
+    border-bottom: 1px solid var(--table-border-color, rgba(0, 0, 0, 0.1));
+    border-right: 1px solid var(--table-border-color, rgba(0, 0, 0, 0.1));
+}
+
+
+.result-table td:last-child {
+    border-right: none; /* Remove right border from last column */
+}
+
+.result-table tr:last-child td {
+    border-bottom: none; /* Remove bottom border from last row */
 }
 
 .result-table tr:nth-child(even) {
@@ -355,18 +356,19 @@ body {
 .pagination-controls {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin: 15px 0;
+    gap: 8px;
+    margin: 10px 0;
 }
 
 .pagination-controls button {
-    padding: 8px 12px;
+    padding: 6px 10px;
     background: var(--secondary-color);
     border: none;
     border-radius: 4px;
     color: var(--text-color);
     cursor: pointer;
     transition: 0.3s ease;
+    font-size: 0.85rem;
 }
 
 .pagination-controls button:hover {
@@ -381,155 +383,94 @@ body {
 .pagination-info {
     margin: 0 10px;
     align-self: center;
-}
-
-/* Icons for different suggestion types */
-.icon-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 0.85rem;
 }
 
 /* Sidebar Styles */
-/* Ensure the page takes full height */
-/* Sidebar Styles */
-/* Ensure the page takes full height */
-html, body {
-    height: 100%;
-    margin: 0; /* Optional: Remove default margins */
-}
-
 .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: var(--sidebar-width);
-            background: var(--secondary-color);
-            padding: 20px;
-            transition: width 0.3s ease;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            scrollbar-width: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width);
+    background: var(--secondary-color);
+    padding: 20px;
+    transition: width 0.3s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
 
-        }
+.new-chat-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    font-size: 0.95rem;
+}
 
-
-        .new-chat-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-color);
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-        }
-
-        .new-chat-btn:hover {
-            background-color: var(--secondary-hover-color);
-        }
-
-.sidebar.collapsed .new-chat-btn span:last-child {
-    display: none;
+.new-chat-btn:hover {
+    background-color: var(--secondary-hover-color);
 }
 
 .nav-links {
-            list-style: none;
-            padding:600px 0px 0px 10px;
-            margin: 0;
-            flex-grow: 1;
-
-        }
-
-        .nav-links li {
-            margin-bottom: 10px;
-        }
-
-        .nav-links li a {
-    pointer-events: auto; /* Ensure it's clickable */
-    display: flex; /* Ensures proper alignment */
-    align-items: center; /* Centers icon and text */
-    text-decoration: none; /* Optional: Remove underline */
-    color: inherit; /* Optional: Inherit text color */
-
+    list-style: none;
+    padding: 20px 0;
+    margin: 0;
+    flex-grow: 1;
 }
- .nav-links a {
-    pointer-events: auto !important;
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            color: var(--text-color);
-            text-decoration: none;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-        }
+
+.nav-links li {
+    margin-bottom: 8px;
+}
+
+.nav-links li a {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.9rem;
+    padding: 8px 10px;
+}
 
 .nav-links a:hover {
-            background-color: var(--secondary-hover-color);
-        }
-
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-
-        .sidebar.collapsed .link-text {
-            display: none;
-        }
-
-        .sidebar.collapsed .new-chat-btn span:last-child {
-            display: none;
-        }
- .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            border-bottom: 1px solid var(--secondary-hover-color);
-        }
-
-        .sidebar-header:hover{
-            cursor: pointer;
-        }
-
-/* Audio recording button */
-#record-audio-btn {
-    position: relative;
+    background-color: var(--secondary-hover-color);
 }
 
-#record-audio-btn.recording::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 12px;
-    height: 12px;
-    background-color: red;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
 }
 
+.sidebar.collapsed .link-text {
+    display: none;
+}
 
-
-
-/* .nav-links li {
-    margin-bottom: 500px;
-
-} */
-
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid var(--secondary-hover-color);
+    cursor: pointer;
+}
 
 .settings-link {
-    position: relative; /* Add this to make the dropdown position relative to this element */
+    position: relative;
     display: flex;
     align-items: center;
     padding: 10px;
-    margin-top: 520px;
+    margin-top: auto;
     color: var(--text-color);
     text-decoration: none;
     border-radius: 8px;
     transition: background-color 0.3s ease;
+    font-size: 0.9rem;
 }
 
 .settings-link:hover {
@@ -540,19 +481,6 @@ html, body {
     margin-right: 15px;
 }
 
-.sidebar.collapsed .link-text {
-    display: none;
-}
-
-/* Position the settings link at the bottom */
-.settings-link:last-child {
-    margin-top: auto; /* Push the last item (Settings) to the bottom */
-    margin-bottom: 40px; /* Remove the bottom margin for the last item */
-}
-
-.hidden {
-    display: none;
-}
 #settings-options {
     background: var(--secondary-color);
     color: var(--text-color);
@@ -561,103 +489,314 @@ html, body {
     position: absolute;
     width: 200px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    display: none; /* Hidden by default */
-    z-index: 1000; /* Ensure it's above other elements */
-    top: 100px;
-    left: 0;
+    display: none;
+    z-index: 1000;
+    bottom: 60px;
+    left: 20px;
+    font-size: 0.85rem;
 }
 
 #settings-options.show {
-    display: block; /* Shows when toggled */
+    display: block;
+}
+
+#settings-options label {
+    display: block;
+    margin-bottom: 8px;
+    cursor: pointer;
 }
 
 .follow-up-container {
-    margin-top: 20px;
-    padding: 15px;
+    margin-top: 15px;
+    padding: 12px;
     background: var(--secondary-color);
     border-radius: 8px;
-    border-left: 4px solid #1d7efd;
+    border-left: 3px solid #1d7efd;
+    font-size: 0.9rem;
 }
 
 .follow-up-container h3 {
     color: var(--text-color);
-    margin-bottom: 10px;
-    font-size: 1.1rem;
+    margin-bottom: 8px;
 }
 
 .follow-up-questions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .follow-up-question {
-    padding: 8px 12px;
+    padding: 8px 10px;
     background: var(--secondary-color);
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
-    /* Added border */
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border with 10% opacity */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.85rem;
 }
 
 .follow-up-question:hover {
     background: var(--secondary-hover-color);
-    /* Slightly more visible border on hover */
     border-color: rgba(255, 255, 255, 0.2);
 }
+
 .back-button {
     position: absolute;
-    top: 20px;
-    right: -260px;
+    top: 10px;
+    right: 20px;
     text-decoration: none;
     color: black;
     font-weight: 500;
-   background-color: white;
-    padding: 6px 12px;
-    border-radius: 8px;
+    background-color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
     transition: background-color 0.2s ease;
+    font-size: 0.85rem;
 }
 
+.back-button:hover {
+    background-color: #f0f0f0;
+}
 
+/* Hide scrollbar but keep functionality */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
 
+::-webkit-scrollbar-track {
+    background: var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-color);
+    border-radius: 3px;
+}
+
+/* Chart container styling */
+.chart-container {
+    width: 100%;
+    height: 400px;
+    margin: 20px 0;
+    border-radius: 8px;
+    background: var(--secondary-color);
+    padding: 15px;
+}
+
+/* Chart controls styling */
+.chart-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.chart-controls select, .chart-controls button {
+    padding: 8px 12px;
+    background: var(--secondary-color);
+    border: 1px solid var(--secondary-hover-color);
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.chart-controls button {
+    background: #1d7efd;
+    border: none;
+    color:white;
+}
+
+.chart-controls button:hover {
+    background: #0264e3;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Download button styling */
+.download-btn {
+    padding: 8px 16px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: inline-block;
+    transition: background-color 0.2s ease;
+}
+
+.download-btn:hover {
+    background: #218838;
+}
+/* Overlay styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 999;
+    display: none;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.overlay.visible {
+    display: block;
+}
+
+/* Visualization panel styles */
+.visualization-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 1000px;
+    height: 80vh;
+    background: var(--primary-color);
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.visualization-panel.visible {
+    display: flex;
+}
+
+.visualization-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.visualization-content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.close-visualization {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1.5rem;
+}
+
+/* Update sidebar button styles */
+.visualization-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.visualization-btn:hover {
+    background-color: var(--secondary-hover-color);
+}
+.download-btn {
+    padding: 8px 16px;
+    background: #1d7efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.download-btn:hover {
+    background: #0264e3;
+}
+
+/* Visualization button specific style */
+.download-btn[style*="6f42c1"] {
+    background: #6f42c1;
+}
+
+.download-btn[style*="6f42c1"]:hover {
+    background: #5a32a3;
+}
+/* Like/Dislike buttons */
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.feedback-btn {
+    background: transparent;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.feedback-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.feedback-btn.liked {
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+.feedback-btn.disliked {
+    border-color: #F44336;
+    color: #F44336;
+}
     </style>
   </head>
   <body>
-
-
     <nav class="sidebar">
         <div class="sidebar-header">
             <span class="material-symbols-rounded">menu</span>
-
         </div>
         <a href="#" class="new-chat-btn" id="new-chat-btn">
             <span class="material-symbols-rounded">Edit</span>
             <span class="link-text">New Chat</span>
         </a>
 
+        <a href="#" class="settings-link" id="settings-link">
+            <span class="material-symbols-rounded">settings</span>
+            <span class="link-text">Settings</span>
+        </a>
 
-
-                <a href="#" class="settings-link" id="settings-link">
-                    <span class="material-symbols-rounded">settings</span>
-                    <span class="link-text">Settings</span>
-                </a>
-
-
-                <div id="settings-options">
-                    <label><input type="radio" name="settings-option" id="option-intellidoc" value="intellidoc"> Document agent</label><br>
-                    <label><input type="radio" name="settings-option" id="option-db-query" value="db_query">Database agent </label><br>
-                    <label><input type="radio" name="settings-option" id="option-researcher" value="researcher"> Web agent</label><br>
-                    <label><input type="checkbox" id="option-all" value="all"> All</label>
-                </div>
-
-
-
-
-
+        <div id="settings-options">
+            <label><input type="radio" name="settings-option" id="option-intellidoc" value="intellidoc"> Document agent</label><br>
+            <label><input type="radio" name="settings-option" id="option-db-query" value="db_query">Database agent </label><br>
+            <label><input type="radio" name="settings-option" id="option-researcher" value="researcher"> Web agent</label><br>
+            <label><input type="checkbox" id="option-all" value="all"> All</label>
+        </div>
     </nav>
 
     <div class="container">
@@ -670,9 +809,15 @@ html, body {
             <h1 class="heading" id="greeting">Hello, there</h1>
             <h2 class="sub-heading">How Can I help you?</h2>
         </header>
+        <!-- Suggestion Container -->
+        <div class="suggestions-container">
+            <ul class="suggestions" id="suggestions-list"></ul>
+        </div>
+        <!-- Suggestion Container -->
+        <!-- <ul class="suggestions" id="suggestions-list"></ul> -->
 
-        <!-- Suggestion List -->
-        <ul class="suggestions" id="suggestions-list"></ul>
+        <!-- Chat Results Container -->
+        <div class="chat-results" id="chat-results"></div>
 
         <!-- Prompt Container -->
         <div class="prompt-container">
@@ -705,558 +850,879 @@ html, body {
             </div>
             <p class="disclaimer-text">XO can make mistakes, so double-check it</p>
         </div>
-
-        <!-- Chat Results Container -->
-        <div class="chat-results" id="chat-results"></div>
     </div>
 
     <script>
-document.addEventListener("DOMContentLoaded", function () {
-    // ✅ DOM Elements
-    const sidebar = document.querySelector(".sidebar");
-    const sidebarHeader = document.querySelector(".sidebar-header");
-    const settingsLink = document.getElementById("settings-link");
-    const settingsOptions = document.getElementById("settings-options");
-    const allCheckbox = document.getElementById("option-all");
-    const suggestionsList = document.getElementById("suggestions-list");
-    const promptForm = document.getElementById("prompt-form");
-    const promptInput = document.getElementById("prompt-input");
-    const chatResults = document.getElementById("chat-results");
-    const themeTogglerBtn = document.getElementById("theme-toggler-btn");
-    const deleteChatsBtn = document.getElementById("new-chat-btn");
-    const recordAudioBtn = document.getElementById("record-audio-btn");
 
-    // ✅ Constants
+    document.addEventListener("DOMContentLoaded", function () {
+        // ✅ DOM Elements
+        const sidebar = document.querySelector(".sidebar");
+        const sidebarHeader = document.querySelector(".sidebar-header");
+        const settingsLink = document.getElementById("settings-link");
+        const settingsOptions = document.getElementById("settings-options");
+        const allCheckbox = document.getElementById("option-all");
+        const suggestionsList = document.getElementById("suggestions-list");
+        const promptForm = document.getElementById("prompt-form");
+        const promptInput = document.getElementById("prompt-input");
+        const chatResults = document.getElementById("chat-results");
+        const themeTogglerBtn = document.getElementById("theme-toggler-btn");
+        const deleteChatsBtn = document.getElementById("new-chat-btn");
+        const recordAudioBtn = document.getElementById("record-audio-btn");
+        
+        // Create overlay and visualization panel elements
+        const overlay = document.createElement("div");
+        overlay.id = "overlay";
+        overlay.className = "overlay hidden";
+        document.body.appendChild(overlay);
+        
+        const visualizationPanel = document.createElement("div");
+        visualizationPanel.className = "visualization-panel";
+        document.body.appendChild(visualizationPanel);
+    
+        // ✅ Constants
+        // const API_BASE_URL = "http://127.0.0.1:8000";
+        const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
+    
 
-    // const API_BASE_URL = "http://127.0.0.1:8000";
-    const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
-
-    let isSubmitting = false;
-        // ✅ Add these at the top with your other constants
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-    // ✅ Initialize App
-    const urlParams = new URLSearchParams(window.location.search);
-    const userName = urlParams.get("name");
-    const userSection = urlParams.get("section");
-
-
-    function setupEventListeners(){
-        deleteChatsBtn.addEventListener("click", function () {
-        chatResults.innerHTML = "";
-    });
-    }
-
-
-    document.getElementById("option-all").checked = true;
-
-    // Set greeting
-    if (userName) {
-        document.getElementById("greeting").textContent = `Hello, ${userName}`;
-    }
-
-    // ✅ Event Listeners
-    // Sidebar Toggle
-    if (sidebar && sidebarHeader) {
-        sidebarHeader.addEventListener("click", () => sidebar.classList.toggle("collapsed"));
-    }
-
-    // Settings Dropdown
-    if (settingsLink && settingsOptions) {
-        settingsLink.addEventListener("click", function (e) {
+    
+        let isSubmitting = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let currentTables = []; // Store table data for visualization panel
+        
+        // ✅ Initialize App
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get("name");
+        const userSection = urlParams.get("section");
+    
+        function setupEventListeners() {
+            deleteChatsBtn.addEventListener("click", function () {
+                chatResults.innerHTML = "";
+                currentTables = [];
+            });
+        }
+    
+        document.getElementById("option-all").checked = true;
+    
+        // Set greeting
+        if (userName) {
+            document.getElementById("greeting").textContent = `Hello, ${userName}`;
+        }
+    
+        // ✅ Event Listeners
+        // Sidebar Toggle
+        if (sidebar && sidebarHeader) {
+            sidebarHeader.addEventListener("click", () => sidebar.classList.toggle("collapsed"));
+        }
+    
+        // Settings Dropdown
+        if (settingsLink && settingsOptions) {
+            settingsLink.addEventListener("click", function (e) {
+                e.preventDefault();
+                const rect = this.getBoundingClientRect();
+                settingsOptions.style.display = "block";
+                settingsOptions.style.top = `${rect.top - settingsOptions.offsetHeight - 10}px`;
+                settingsOptions.style.left = `${rect.left}px`;
+                settingsOptions.classList.toggle("show");
+            });
+    
+            document.addEventListener("click", (e) => {
+                if (!settingsLink.contains(e.target) && !settingsOptions.contains(e.target)) {
+                    settingsOptions.classList.remove("show");
+                    settingsOptions.style.display = "none";
+                }
+            });
+        }
+        
+        // Theme Toggler
+        themeTogglerBtn.addEventListener("click", toggleTheme);
+        // Audio Recording
+        recordAudioBtn.addEventListener("click", toggleAudioRecording);
+    
+        // Form Submission
+        promptForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const rect = this.getBoundingClientRect();
-            settingsOptions.style.display = "block";
-            settingsOptions.style.top = `${rect.top - settingsOptions.offsetHeight - 10}px`;
-            settingsOptions.style.left = `${rect.left}px`;
-            settingsOptions.classList.toggle("show");
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!settingsLink.contains(e.target) && !settingsOptions.contains(e.target)) {
-                settingsOptions.classList.remove("show");
-                settingsOptions.style.display = "none";
+            if (!isSubmitting && promptInput.value.trim()) {
+                await submitQuery(promptInput.value.trim());
             }
         });
-    }
-
-    // Settings Options Handling
-    document.querySelectorAll('input[name="settings-option"]').forEach(option => {
-        option.addEventListener("change", function() {
-            if (this.checked) allCheckbox.checked = false;
-        });
-    });
-
-    allCheckbox.addEventListener("change", function() {
-        if (this.checked) {
-            document.querySelectorAll('input[name="settings-option"]').forEach(option => {
-                option.checked = false;
+    
+        // ✅ Core Functions
+        async function fetchQuestions(section) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get_questions/?subject=${section}`);
+                const data = await response.json();
+                displaySuggestions(data.questions || []);
+            } catch (error) {
+                console.error("Fetch questions error:", error);
+                displaySuggestions([]);
+            }
+        }
+    
+        function displaySuggestions(questions) {
+            suggestionsList.innerHTML = "";
+            const colors = ["#1d7efd", "#28a745", "#ffc107", "#6f42c1", "#e91e63",
+            "#28a745", "#ffc107", "#6f42c1", "#e91e63", "red"];
+            const icons = [
+            'draw', 'lightbulb', 'explore', 'list', 'gesture',
+            'rocket_launch', 'psychology', 'auto_awesome', 'hub', 'insights'
+        ];
+    
+            questions.slice(0, 10).forEach((question, index) => {
+                const li = document.createElement("li");
+                li.className = "suggestions-item";
+                li.innerHTML = `
+                    <p class="text">${question}</p>
+                    <span class="material-symbols-rounded" style="color: ${colors[index % colors.length]}">
+                        ${icons[index % icons.length]}
+                    </span>
+                `;
+                li.addEventListener("click", () => {
+                    promptInput.value = question;
+                    promptInput.focus();
+                });
+                suggestionsList.appendChild(li);
             });
         }
-    });
-
-
-
-    // Theme Toggler
-    themeTogglerBtn.addEventListener("click", toggleTheme);
-    // Audio Recording
-    recordAudioBtn.addEventListener("click", toggleAudioRecording);
-
-
-    // Form Submission
-    promptForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!isSubmitting && promptInput.value.trim()) {
-            await submitQuery(promptInput.value.trim());
+    
+        async function submitQuery(query) {
+            isSubmitting = true;
+            addMessageToChat("user", query);
+    
+            promptInput.value = "";
+            currentTables = [];
+            const visualizationContent = document.getElementById("visualization-content");
+            if (visualizationContent) visualizationContent.innerHTML = "";
+    
+            visualizationPanel.classList.remove("visible");
+            overlay.classList.remove("visible");
+    
+            showLoadingIndicator();
+    
+            try {
+                const formData = new FormData();
+                formData.append("section", userSection);
+                formData.append("user_query", query);
+                formData.append("example_question", "");
+    
+                const tools = [];
+                if (allCheckbox.checked) {
+                    tools.push("all");
+                } else {
+                    document.querySelectorAll('input[name="settings-option"]:checked').forEach(option => {
+                        tools.push(option.value);
+                    });
+                }
+    
+                tools.forEach(tool => formData.append("tool_selected", tool));
+    
+                const response = await fetch(`${API_BASE_URL}/submit`, {
+                    method: "POST",
+                    body: formData,
+                    headers: { "Accept": "application/json" }
+                });
+    
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+                const data = await response.json();
+                processResponse(data);
+            } catch (error) {
+                console.error("Submission error:", error);
+                displayErrorMessage("Failed to process your request. Please try again.");
+            } finally {
+                removeLoadingIndicator();
+                isSubmitting = false;
+                promptInput.value = "";
+            }
         }
-    });
-
-
-
-    // ✅ Core Functions
-    // Fetch Questions
-    async function fetchQuestions(section) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/get_questions/?subject=${section}`);
-            const data = await response.json();
-            displaySuggestions(data.questions || []);
-        } catch (error) {
-            console.error("Fetch questions error:", error);
-            displaySuggestions([]);
-        }
-    }
-
-    // Display Suggestions
-    function displaySuggestions(questions) {
-        suggestionsList.innerHTML = "";
-        const colors = ["#1d7efd", "#28a745", "#ffc107", "#6f42c1", "#e91e63",
-        "#28a745", "#ffc107", "#6f42c1", "#e91e63", "red"];
-        const icons = [
-        'draw', 'lightbulb', 'explore', 'list', 'gesture',
-        'rocket_launch', 'psychology', 'auto_awesome', 'hub', 'insights'
-    ];
-
-        questions.slice(0, 10).forEach((question, index) => {
-            const li = document.createElement("li");
-            li.className = "suggestions-item";
-            li.innerHTML = `
-                <p class="text">${question}</p>
-                <span class="material-symbols-rounded" style="color: ${colors[index % colors.length]}">
-                    ${icons[index % icons.length]}
-                </span>
-            `;
-            li.addEventListener("click", () => {
-                promptInput.value = question;
-                promptInput.focus();
-            });
-            suggestionsList.appendChild(li);
-        });
-    }
-
-    // Submit Query
-    async function submitQuery(query) {
-        isSubmitting = true;
-        addMessageToChat("user", query);
-
-        // Clear input field
-        promptInput.value = "";
-
-        // Show loading indicator
-        showLoadingIndicator();
-
-        try {
-            const formData = new FormData();
-            formData.append("section", userSection);
-            formData.append("user_query", query);
-            formData.append("example_question", "");
-
-            // Get selected tools
-            const tools = [];
-            if (allCheckbox.checked) {
-                tools.push("all");
+    
+        async function toggleAudioRecording() {
+            if (!mediaRecorder) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+    
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await transcribeAudio(audioBlob);
+                        recordAudioBtn.classList.remove("recording");
+                    };
+    
+                    mediaRecorder.start();
+                    recordAudioBtn.classList.add("recording");
+                } catch (error) {
+                    console.error("Error accessing microphone:", error);
+                    alert("Could not access microphone. Please check permissions.");
+                }
             } else {
-                document.querySelectorAll('input[name="settings-option"]:checked').forEach(option => {
-                    tools.push(option.value);
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                mediaRecorder = null;
+            }
+        }
+    
+        async function transcribeAudio(audioBlob) {
+            showLoadingIndicator();
+    
+            try {
+                const formData = new FormData();
+                formData.append("file", audioBlob, "recording.webm");
+    
+                const response = await fetch(`${API_BASE_URL}/transcribe-audio/`, {
+                    method: "POST",
+                    body: formData
+                });
+    
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+                const data = await response.json();
+                promptInput.value = data.transcription;
+                removeLoadingIndicator();
+            } catch (error) {
+                console.error("Transcription error:", error);
+                displayErrorMessage("Failed to transcribe audio. Please try again.");
+            } finally {
+                removeLoadingIndicator();
+                audioChunks = [];
+            }
+        }
+    
+        function formatLLMResponse(data) {
+            const container = document.createElement("div");
+            container.classList.add("search-result");
+    
+            data = data.replace(/^Search Results\s*/, "");
+    
+            const sourceMatch = data.match(/Source\s*:\s*([\s\S]*?)(Related Quer(y|ies):|$)/s);
+            const relatedQueryMatch = data.match(/Related Quer(y|ies):\s*([\s\S]*?)(Source:|$)/s);
+    
+            let responseText = data.split(/Related Quer(y|ies):|Source:/)[0].trim();
+            let sourceText = sourceMatch ? sourceMatch[1].trim() : "";
+            let relatedQueriesText = relatedQueryMatch ? relatedQueryMatch[2].trim() : "";
+    
+            responseText = responseText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    
+            if (responseText) {
+                const responseDiv = document.createElement("div");
+                responseDiv.classList.add("response-section");
+                responseDiv.innerHTML = `<p>${responseText.replace(/\n/g, "<br>")}</p>`;
+                container.appendChild(responseDiv);
+            }
+    
+            if (sourceText) {
+                const sourceDiv = document.createElement("div");
+                sourceDiv.classList.add("source-section");
+                sourceDiv.innerHTML = `<h3><strong>Source</strong></h3><p>${sourceText.replace(/\n/g, "<br>")}</p>`;
+                container.appendChild(sourceDiv);
+            }
+    
+            return container.innerHTML;
+        }
+    
+        function processResponse(data) {
+            console.log("Full response data:", data);
+    
+            if (data.error) {
+                displayErrorMessage(data.error);
+                return;
+            }
+    
+            currentTables = [];
+    
+            if (data.search_results) {
+                const formattedResponse = formatLLMResponse(data.search_results);
+                addMessageToChat("ai", formattedResponse);
+            }
+    
+            if (data.query) {
+                addMessageToChat("ai", `Generated SQL: <pre>${data.query}</pre><br> Insights: ${data.chat_insight}`);
+            }
+    
+            if (data.tables?.length > 0) {
+                data.tables.forEach(table => {
+                    const uniqueId = `${table.table_name}-${Date.now()}`;
+                    currentTables.push({ 
+                        uniqueId: uniqueId,
+                        html: table.table_html 
+                    });
+                    addTableToChat(uniqueId, table.table_html);
+                    addTableButtons(uniqueId);
                 });
             }
-
-
-
-           tools.forEach(tool => formData.append("tool_selected", tool));
-
-            const response = await fetch(`${API_BASE_URL}/submit`, {
-                method: "POST",
-                body: formData,
-                headers: { "Accept": "application/json" }
-            });
-
-            // removeLoadingIndicator();
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            const data = await response.json();
-            processResponse(data);
-        } catch (error) {
-            console.error("Submission error:", error);
-            displayErrorMessage("Failed to process your request. Please try again.");
-        } finally {
-            removeLoadingIndicator();
-            isSubmitting = false;
-            promptInput.value = "";
-        }
-    }
-     // Audio Recording Functions
-     async function toggleAudioRecording() {
-
-
-        if (!mediaRecorder) {
-            // Start recording
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    await transcribeAudio(audioBlob);
-                    recordAudioBtn.classList.remove("recording");
-                };
-
-                mediaRecorder.start();
-                recordAudioBtn.classList.add("recording");
-            } catch (error) {
-                console.error("Error accessing microphone:", error);
-                alert("Could not access microphone. Please check permissions.");
+    
+            if (data.follow_up_questions && Object.keys(data.follow_up_questions).length > 0) {
+                addFollowUpQuestions(data.follow_up_questions);
             }
-        } else {
-            // Stop recording
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            mediaRecorder = null;
         }
-    }
-
-    async function transcribeAudio(audioBlob) {
-        showLoadingIndicator();
-
-        try {
-            const formData = new FormData();
-            formData.append("file", audioBlob, "recording.webm");
-
-            const response = await fetch(`${API_BASE_URL}/transcribe-audio/`, {
-                method: "POST",
-                body: formData
+    
+        function addFollowUpQuestions(followUps) {
+            const followUpContainer = document.createElement("div");
+            followUpContainer.className = "follow-up-container";
+    
+            const title = document.createElement("h3");
+            title.textContent = "Suggested Follow-up Questions";
+            title.style.marginTop = "20px";
+            title.style.marginBottom = "10px";
+            title.style.color = "#1d7efd";
+            followUpContainer.appendChild(title);
+    
+            const questionsList = document.createElement("div");
+            questionsList.className = "follow-up-questions";
+    
+            Object.entries(followUps).forEach(([key, question]) => {
+                if (question && question.trim()) {
+                    const questionElement = document.createElement("div");
+                    questionElement.className = "follow-up-question";
+                    questionElement.textContent = question;
+                    questionElement.style.cursor = "pointer";
+                    questionElement.style.padding = "8px 12px";
+                    questionElement.style.margin = "5px 0";
+                    questionElement.style.borderRadius = "4px";
+                    questionElement.style.backgroundColor = "var(--secondary-color)";
+                    questionElement.style.transition = "background-color 0.3s";
+    
+                    questionElement.addEventListener("mouseover", () => {
+                        questionElement.style.backgroundColor = "var(--secondary-hover-color)";
+                    });
+    
+                    questionElement.addEventListener("mouseout", () => {
+                        questionElement.style.backgroundColor = "var(--secondary-color)";
+                    });
+    
+                    questionElement.addEventListener("click", () => {
+                        promptInput.value = question;
+                        promptInput.focus();
+                    });
+    
+                    questionsList.appendChild(questionElement);
+                }
             });
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            const data = await response.json();
-            promptInput.value = data.transcription;
-            removeLoadingIndicator();
-        } catch (error) {
-            console.error("Transcription error:", error);
-            displayErrorMessage("Failed to transcribe audio. Please try again.");
-
-        }finally {
-        removeLoadingIndicator();
-        audioChunks = []; // Clear chunks after processing
-    }
-
-    }
-
-
-
-
-    function formatLLMResponse(data) {
-    const container = document.createElement("div");
-    container.classList.add("search-result");
-
-    // Remove "Search Results" if present
-    data = data.replace(/^Search Results\s*/, "");
-
-    // Extract sections dynamically
-    const sourceMatch = data.match(/Source\s*:\s*([\s\S]*?)(Related Quer(y|ies):|$)/s);
-    const relatedQueryMatch = data.match(/Related Quer(y|ies):\s*([\s\S]*?)(Source:|$)/s);
-
-    let responseText = data.split(/Related Quer(y|ies):|Source:/)[0].trim(); // Extracts main response before "Related Query/Queries" or "Source"
-    let sourceText = sourceMatch ? sourceMatch[1].trim() : "";
-    let relatedQueriesText = relatedQueryMatch ? relatedQueryMatch[2].trim() : "";
-
-    // Format bold text (convert **bold** to <strong>bold</strong>)
-    responseText = responseText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-
-    // Format main response
-    if (responseText) {
-        const responseDiv = document.createElement("div");
-        responseDiv.classList.add("response-section");
-        responseDiv.innerHTML = `<p>${responseText.replace(/\n/g, "<br>")}</p>`;
-        container.appendChild(responseDiv);
-    }
-
-    // Format source section (Display Source First)
-    if (sourceText) {
-        const sourceDiv = document.createElement("div");
-        sourceDiv.classList.add("source-section");
-        sourceDiv.innerHTML = `<h3><strong>Source</strong></h3><p>${sourceText.replace(/\n/g, "<br>")}</p>`;
-        container.appendChild(sourceDiv);
-    }
-
-
-
-
-    return container.innerHTML;
-}
-
-
-
-
-function processResponse(data) {
-    console.log("Full response data with follow-ups:", {
-        ...data,
-        follow_up_questions: data.follow_up_questions || {}
-    });
-
-    if (data.error) {
-        displayErrorMessage(data.error);
-        return;
-    }
-
-    if (data.search_results) {
-        const formattedResponse = formatLLMResponse(data.search_results);
-        addMessageToChat("ai", formattedResponse);
-    }
-
-    if (data.query) {
-        addMessageToChat("ai", `Generated SQL: <pre>${data.query}</pre><br> Insights: ${data.chat_insight}`);
-
-    }
-
-    if (data.tables?.length > 0) {
-        data.tables.forEach(table => addTableToChat(table.table_html));
-    }
-
-    // Debug follow-ups more thoroughly
-    const hasFollowUps = data.follow_up_questions && Object.keys(data.follow_up_questions).length > 0;
-    console.log("Has follow-up questions?", hasFollowUps, "Content:", data.follow_up_questions);
-
-    if (hasFollowUps) {
-        console.log("Adding follow-up questions:", data.follow_up_questions);
-        addFollowUpQuestions(data.follow_up_questions);
-    }
-}
-
-function addFollowUpQuestions(followUps) {
-    console.log("Adding follow-up questions:", followUps); // Debugging
-    const followUpContainer = document.createElement("div");
-    followUpContainer.className = "follow-up-container";
-
-    const title = document.createElement("h3");
-    title.textContent = "Suggested Follow-up Questions";
-    title.style.marginTop = "20px";
-    title.style.marginBottom = "10px";
-    title.style.color = "#1d7efd";
-    followUpContainer.appendChild(title);
-
-    const questionsList = document.createElement("div");
-    questionsList.className = "follow-up-questions";
-
-    Object.entries(followUps).forEach(([key, question]) => {
-        if (question && question.trim()) {
-            const questionElement = document.createElement("div");
-            questionElement.className = "follow-up-question";
-            questionElement.textContent = question;
-            questionElement.style.cursor = "pointer";
-            questionElement.style.padding = "8px 12px";
-            questionElement.style.margin = "5px 0";
-            questionElement.style.borderRadius = "4px";
-            questionElement.style.backgroundColor = "var(--secondary-color)";
-            questionElement.style.transition = "background-color 0.3s";
-
-            questionElement.addEventListener("mouseover", () => {
-                questionElement.style.backgroundColor = "var(--secondary-hover-color)";
-            });
-
-            questionElement.addEventListener("mouseout", () => {
-                questionElement.style.backgroundColor = "var(--secondary-color)";
-            });
-
-            questionElement.addEventListener("click", () => {
-                promptInput.value = question;
-                promptInput.focus();
-            });
-
-            questionsList.appendChild(questionElement);
-        }
-    });
-
-    followUpContainer.appendChild(questionsList);
-    chatResults.appendChild(followUpContainer);
-    window.scrollTo(0, document.body.scrollHeight);
-}
-
-    // Table Handling
-    function addTableToChat(tableHTML) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(tableHTML, "text/html");
-        const table = doc.querySelector("table");
-
-
-        if (!table) return;
-
-        doc.querySelectorAll("style").forEach(el => el.remove());
-
-        // Remove any auto-generated ID and class names (like T_bad56)
-        table.removeAttribute("id");
-        table.classList.add("result-table"); // Apply custom CSS class
-
-        // Clean table
-        table.querySelectorAll("th.blank, td.index_col").forEach(el => el.remove());
-
-        table.querySelectorAll("th.row_heading").forEach(el => el.remove());
-
-        // Create paginated table
-        const rows = Array.from(table.querySelectorAll("tbody tr"));
-        const rowsPerPage = 5;
-        let currentPage = 1;
-
-        const tableContainer = document.createElement("div");
-        tableContainer.className = "table-container";
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "table-wrapper";
-
-        const pagination = document.createElement("div");
-        pagination.className = "pagination-controls";
-
-        const prevBtn = createPaginationButton("←", () => changePage(-1));
-        const nextBtn = createPaginationButton("→", () => changePage(1));
-
-        pagination.append(prevBtn, nextBtn);
-        wrapper.append(table, pagination);
-        tableContainer.append(wrapper);
-
-        chatResults.appendChild(tableContainer);
-        renderTable();
-
-        function renderTable() {
-            const tbody = table.querySelector("tbody");
-            tbody.innerHTML = "";
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            rows.slice(start, end).forEach(row => tbody.appendChild(row));
-
-            prevBtn.disabled = currentPage === 1;
-            nextBtn.disabled = end >= rows.length;
+    
+            followUpContainer.appendChild(questionsList);
+            chatResults.appendChild(followUpContainer);
             window.scrollTo(0, document.body.scrollHeight);
         }
-
-        function changePage(delta) {
-            currentPage += delta;
+    
+        function addTableToChat(uniqueId, tableHTML) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(tableHTML, "text/html");
+            const table = doc.querySelector("table");
+            
+            if (!table) return;
+    
+            const tableContainer = document.createElement("div");
+            tableContainer.className = "table-container";
+            tableContainer.id = `table-container-${uniqueId}`;
+    
+            const wrapper = document.createElement("div");
+            wrapper.className = "table-wrapper";
+    
+            table.removeAttribute("id");
+            table.classList.add("result-table");
+            doc.querySelectorAll("style").forEach(el => el.remove());
+            table.querySelectorAll("th.blank, td.index_col, th.row_heading").forEach(el => el.remove());
+    
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const rowsPerPage = 5;
+            let currentPage = 1;
+    
+            const pagination = document.createElement("div");
+            pagination.className = "pagination-controls";
+    
+            const prevBtn = createPaginationButton("←", () => changePage(-1));
+            const nextBtn = createPaginationButton("→", () => changePage(1));
+            const pageInfo = document.createElement("span");
+            pageInfo.className = "pagination-info";
+    
+            pagination.append(prevBtn, pageInfo, nextBtn);
+            wrapper.append(table, pagination);
+            tableContainer.append(wrapper);
+    
+            chatResults.appendChild(tableContainer);
             renderTable();
+    
+            function renderTable() {
+                const tbody = table.querySelector("tbody");
+                tbody.innerHTML = "";
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                rows.slice(start, end).forEach(row => tbody.appendChild(row));
+    
+                prevBtn.disabled = currentPage === 1;
+                nextBtn.disabled = end >= rows.length;
+                pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(rows.length / rowsPerPage)}`;
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+    
+            function changePage(delta) {
+                currentPage += delta;
+                renderTable();
+            }
         }
-    }
-
-
-    // Helper Functions
-    function addMessageToChat(role, content) {
-    console.log("addMessageToChat called with role:", role, "and content:", content); // Debugging: Log the function call and parameters
-
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `chat-message ${role}-message`;
-    messageDiv.innerHTML = content;
-
-    console.log("Message Div Created:", messageDiv); // Debugging: Log the created message div
-
-    const chatResults = document.getElementById("chat-results");
-    if (chatResults) {
-        chatResults.appendChild(messageDiv);
-        console.log("Message Div Appended to Chat Results"); // Debugging: Log the successful append
-    } else {
-        console.error("Chat Results container not found!"); // Debugging: Log an error if the container is missing
-    }
-
-    window.scrollTo(0, document.body.scrollHeight);
-    console.log("Page Scrolled to Bottom"); // Debugging: Log the scroll action
-}
-    function showLoadingIndicator() {
-        const loader = document.createElement("div");
-        loader.className = "loading-indicator";
-        loader.innerHTML = '<span></span><span></span><span></span>';
-        chatResults.appendChild(loader);
-    }
-
-    function removeLoadingIndicator() {
-        const loader = document.querySelector(".loading-indicator");
-        if (loader) loader.remove();
-    }
-
-    function displayErrorMessage(message) {
-        const errorDiv = document.createElement("div");
-        errorDiv.className = "chat-message error-message";
-        errorDiv.textContent = message;
-        chatResults.appendChild(errorDiv);
-    }
-
-    function createPaginationButton(text, onClick) {
-        const btn = document.createElement("button");
-        btn.innerHTML = text;
-        btn.addEventListener("click", onClick);
-        return btn;
-    }
-
-    function toggleTheme() {
-        const root = document.documentElement;
-        const isDarkTheme = getComputedStyle(root).getPropertyValue('--primary-color').trim() === '#101623';
-
-        if (isDarkTheme) {
-            // Switch to light theme
-            root.style.setProperty('--text-color', '#333333');
-            root.style.setProperty('--subheading-color', '#555555');
-            root.style.setProperty('--placeholder-color', '#777777');
-            root.style.setProperty('--primary-color', '#ffffff');
-            root.style.setProperty('--secondary-color', '#f0f0f0');
-            root.style.setProperty('--secondary-hover-color', '#e0e0e0');
-            root.style.setProperty('--scrollbar-color', '#cccccc');
-            themeTogglerBtn.textContent = 'dark_mode';
+    
+        function addTableButtons(uniqueId) {
+            const buttonsContainer = document.createElement("div");
+            buttonsContainer.style.display = "flex";
+            buttonsContainer.style.gap = "10px";
+            buttonsContainer.style.marginTop = "10px";
+            
+            // Download button
+            const downloadBtn = document.createElement("button");
+            downloadBtn.className = "download-btn";
+            downloadBtn.innerHTML = `<span class="material-symbols-rounded">download</span> Download`;
+            downloadBtn.addEventListener("click", () => downloadTable(uniqueId));
+            
+            // Visualization button
+            const visualizeBtn = document.createElement("button");
+            visualizeBtn.className = "download-btn";
+            visualizeBtn.style.backgroundColor = "#6f42c1";
+            visualizeBtn.innerHTML = `<span class="material-symbols-rounded">bar_chart</span> Visualize`;
+            visualizeBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                createVisualizationPanel(uniqueId);
+                visualizationPanel.classList.add("visible");
+                overlay.classList.add("visible");
+            });
+            
+            buttonsContainer.appendChild(downloadBtn);
+            buttonsContainer.appendChild(visualizeBtn);
+            
+            const tableContainer = document.getElementById(`table-container-${uniqueId}`);
+            if (tableContainer) {
+                tableContainer.insertAdjacentElement("afterend", buttonsContainer);
+            }
+        }
+    
+        function createVisualizationPanel(uniqueId) {
+            // Clear existing content
+            visualizationPanel.innerHTML = `
+                <div class="visualization-header">
+                    <h2>Data Visualization: ${uniqueId.split('-')[0]}</h2>
+                    <button class="close-visualization material-symbols-rounded">close</button>
+                </div>
+                <div class="visualization-content" id="visualization-content"></div>
+            `;
+            
+            const closeBtn = visualizationPanel.querySelector(".close-visualization");
+            closeBtn.addEventListener("click", () => {
+                visualizationPanel.classList.remove("visible");
+                overlay.classList.remove("visible");
+            });
+            
+            // Add only the specified table to the visualization panel
+            const table = currentTables.find(t => t.uniqueId === uniqueId);
+            if (table) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(table.html, "text/html");
+                const tableElement = doc.querySelector("table");
+                
+                // Remove the index column (first column)
+                const rows = tableElement.querySelectorAll('tr');
+                rows.forEach(row => {
+                    // Remove first cell (td or th) in each row
+                    const firstCell = row.querySelector('th, td');
+                    if (firstCell) {
+                        row.removeChild(firstCell);
+                    }
+                });
+                
+                // Create the same container structure as main tables
+                const tableContainer = document.createElement("div");
+                tableContainer.className = "table-container";
+                
+                const wrapper = document.createElement("div");
+                wrapper.className = "table-wrapper";
+                
+                // Clone the table and maintain its classes
+                const clonedTable = tableElement.cloneNode(true);
+                clonedTable.classList.add("result-table"); // Ensure class is added
+                
+                wrapper.appendChild(clonedTable);
+                tableContainer.appendChild(wrapper);
+                
+                const visualizationContent = document.getElementById("visualization-content");
+                visualizationContent.appendChild(tableContainer);
+                addChartControlsToPanel(uniqueId);
+            }
+        }
+    
+        async function addChartControlsToPanel(uniqueId) {
+            const chartContainer = document.createElement("div");
+            chartContainer.className = "chart-container";
+            chartContainer.id = `chart-${uniqueId}`;
+            
+            const chartTitle = document.createElement("h3");
+            chartTitle.textContent = `Visualize ${uniqueId.split('-')[0]}`;
+            chartContainer.appendChild(chartTitle);
+    
+            const controlsDiv = document.createElement("div");
+            controlsDiv.className = "chart-controls";
+            
+            // X-Axis Select
+            const xAxisSelect = document.createElement("select");
+            xAxisSelect.id = `x-axis-${uniqueId}`;
+            xAxisSelect.innerHTML = '<option value="">Select X-Axis</option>';
+            
+            // Y-Axis Select
+            const yAxisSelect = document.createElement("select");
+            yAxisSelect.id = `y-axis-${uniqueId}`;
+            yAxisSelect.innerHTML = '<option value="">Select Y-Axis</option>';
+            
+            // Chart Type Select
+            const chartTypeSelect = document.createElement("select");
+            chartTypeSelect.id = `chart-type-${uniqueId}`;
+            chartTypeSelect.innerHTML = `
+                <option value="">Select Chart Type</option>
+                <option value="line">Line Chart</option>
+                <option value="bar">Bar Chart</option>
+                <option value="pie">Pie Chart</option>
+                <option value="scatter">Scatter Plot</option>
+            `;
+            
+            // Generate Chart Button
+            const generateBtn = document.createElement("button");
+            generateBtn.textContent = "Generate Chart";
+            generateBtn.addEventListener("click", () => generateChart(uniqueId));
+            
+            controlsDiv.appendChild(xAxisSelect);
+            controlsDiv.appendChild(yAxisSelect);
+            controlsDiv.appendChild(chartTypeSelect);
+            controlsDiv.appendChild(generateBtn);
+            chartContainer.appendChild(controlsDiv);
+            
+            // Chart Display Area
+            const chartDiv = document.createElement("div");
+            chartDiv.id = `chart-display-${uniqueId}`;
+            chartDiv.style.height = "400px";
+            chartContainer.appendChild(chartDiv);
+            
+            // Add to visualization content
+            const visualizationContent = document.getElementById("visualization-content");
+            if (visualizationContent) {
+                visualizationContent.appendChild(chartContainer);
+            }
+            
+            // Fetch columns for the table
+            setTimeout(() => fetchTableColumns(uniqueId), 100);
+        }
+    
+        async function fetchTableColumns(uniqueId) {
+            try {
+                // Get the table from visualization panel instead of main container
+                const visualizationContent = document.getElementById("visualization-content");
+                const table = visualizationContent.querySelector("table");
+                
+                if (!table) {
+                    console.error("Table not found in visualization panel");
+                    return;
+                }
+                
+                const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+                
+                const xAxisSelect = document.getElementById(`x-axis-${uniqueId}`);
+                const yAxisSelect = document.getElementById(`y-axis-${uniqueId}`);
+                
+                // Clear existing options
+                xAxisSelect.innerHTML = '<option value="">Select X-Axis</option>';
+                yAxisSelect.innerHTML = '<option value="">Select Y-Axis</option>';
+                
+                // Populate new options
+                headers.forEach(column => {
+                    const xOption = document.createElement("option");
+                    xOption.value = column;
+                    xOption.textContent = column;
+                    xAxisSelect.appendChild(xOption);
+                    
+                    const yOption = document.createElement("option");
+                    yOption.value = column;
+                    yOption.textContent = column;
+                    yAxisSelect.appendChild(yOption);
+                });
+            } catch (error) {
+                console.error("Error fetching table columns:", error);
+            }
+        }
+    
+        async function generateChart(uniqueId) {
+            try {
+                await ensurePlotlyLoaded();
+                
+                const xAxis = document.getElementById(`x-axis-${uniqueId}`).value;
+                const yAxis = document.getElementById(`y-axis-${uniqueId}`).value;
+                const chartType = document.getElementById(`chart-type-${uniqueId}`).value;
+                
+                if (!xAxis || !yAxis || !chartType) {
+                    alert("Please select all chart options");
+                    return;
+                }
+    
+                const table = document.querySelector(`#table-container-${uniqueId} table`);
+                if (!table) {
+                    throw new Error("Table not found");
+                }
+    
+                const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+                const rows = Array.from(table.querySelectorAll("tbody tr")).map(row => 
+                    Array.from(row.querySelectorAll("td")).map(td => td.textContent.trim())
+                );
+    
+                const xIndex = headers.indexOf(xAxis);
+                const yIndex = headers.indexOf(yAxis);
+                
+                if (xIndex === -1 || yIndex === -1) {
+                    throw new Error("Invalid axis selection");
+                }
+    
+                const xValues = rows.map(row => row[xIndex]);
+                const yValues = rows.map(row => parseFloat(row[yIndex]) || 0);
+    
+                const chartDiv = document.getElementById(`chart-display-${uniqueId}`);
+                chartDiv.innerHTML = "";
+    
+                let chartData;
+                switch (chartType) {
+                    case "line":
+                        chartData = [{
+                            x: xValues,
+                            y: yValues,
+                            type: 'line'
+                        }];
+                        break;
+                    case "bar":
+                        chartData = [{
+                            x: xValues,
+                            y: yValues,
+                            type: 'bar'
+                        }];
+                        break;
+                    case "pie":
+                        chartData = [{
+                            labels: xValues,
+                            values: yValues,
+                            type: 'pie'
+                        }];
+                        break;
+                    case "scatter":
+                        chartData = [{
+                            x: xValues,
+                            y: yValues,
+                            mode: 'markers',
+                            type: 'scatter'
+                        }];
+                        break;
+                    default:
+                        throw new Error("Invalid chart type");
+                }
+    
+                const layout = {
+                    title: `${uniqueId.split('-')[0]} - ${xAxis} vs ${yAxis}`,
+                    xaxis: { title: xAxis },
+                    yaxis: { title: yAxis }
+                };
+    
+                Plotly.newPlot(chartDiv, chartData, layout);
+                
+            } catch (error) {
+                console.error("Chart generation error:", error);
+                const chartDiv = document.getElementById(`chart-display-${uniqueId}`);
+                if (chartDiv) {
+                    chartDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                }
+                alert(`Error generating chart: ${error.message}`);
+            }
+        }
+    
+        async function downloadTable(uniqueId) {
+            try {
+                const table = document.querySelector(`#table-container-${uniqueId} table`);
+                if (table) {
+                    const html = table.outerHTML;
+                    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${uniqueId.split('-')[0]}.xls`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                console.error("Download error:", error);
+                displayErrorMessage("Failed to download table. Please try again.");
+            }
+        }
+    
+        // Helper Functions
+        function addMessageToChat(role, content) {
+            console.log("addMessageToChat called with role:", role, "and content:", content);
+    
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `chat-message ${role}-message`;
+            
+            // Create content container
+            const contentDiv = document.createElement("div");
+            contentDiv.innerHTML = content;
+            messageDiv.appendChild(contentDiv);
+    
+            // Add feedback buttons for AI messages
+            if (role === "ai") {
+                const feedbackDiv = document.createElement("div");
+                feedbackDiv.className = "feedback-buttons";
+                const messageId = Date.now();
+                feedbackDiv.innerHTML = `
+                    <button class="feedback-btn like-btn" data-message-id="${messageId}">
+                        <span class="material-symbols-rounded">thumb_up</span> Helpful
+                    </button>
+                    <button class="feedback-btn dislike-btn" data-message-id="${messageId}">
+                        <span class="material-symbols-rounded">thumb_down</span> Not Helpful
+                    </button>
+                `;
+                
+                // Add event listeners
+                const likeBtn = feedbackDiv.querySelector('.like-btn');
+                const dislikeBtn = feedbackDiv.querySelector('.dislike-btn');
+                
+                likeBtn.addEventListener('click', function() {
+                    this.classList.add('liked');
+                    dislikeBtn.classList.remove('disliked');
+                    sendFeedback(messageId, 'like');
+                });
+                
+                dislikeBtn.addEventListener('click', function() {
+                    this.classList.add('disliked');
+                    likeBtn.classList.remove('liked');
+                    sendFeedback(messageId, 'dislike');
+                });
+                
+                messageDiv.appendChild(feedbackDiv);
+            }
+    
+            // Append to chat results
+            const chatResults = document.getElementById("chat-results");
+            if (chatResults) {
+                chatResults.appendChild(messageDiv);
+            } else {
+                console.error("Chat Results container not found!");
+            }
+    
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+        
+        function showLoadingIndicator() {
+            const loader = document.createElement("div");
+            loader.className = "loading-indicator";
+            loader.innerHTML = '<span></span><span></span><span></span>';
+            chatResults.appendChild(loader);
+        }
+    
+        function removeLoadingIndicator() {
+            const loader = document.querySelector(".loading-indicator");
+            if (loader) loader.remove();
+        }
+    
+        function displayErrorMessage(message) {
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "chat-message error-message";
+            errorDiv.textContent = message;
+            chatResults.appendChild(errorDiv);
+        }
+    
+        function createPaginationButton(text, onClick) {
+            const btn = document.createElement("button");
+            btn.innerHTML = text;
+            btn.addEventListener("click", onClick);
+            return btn;
+        }
+    
+        async function ensurePlotlyLoaded() {
+            if (typeof Plotly === 'undefined') {
+                return new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.plot.ly/plotly-latest.min.js';
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            }
+        }
+        
+        async function sendFeedback(messageId, feedbackType) {
+            try {
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`).closest('.chat-message');
+                const messageContent = messageElement.querySelector('div:first-child').innerText;
+                
+                // Extract table name if available (you might need to adjust this based on your actual response structure)
+                let tableName = 'general_chat';
+                const tableElement = messageElement.querySelector('table');
+                if (tableElement) {
+                    tableName = tableElement.getAttribute('data-table-name') || 'data_table';
+                }
+    
+                const response = await fetch(`${API_BASE_URL}/submit_feedback/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        table_name: tableName,
+                        feedback_type: feedbackType,
+                        user_query: promptInput.value, // or messageContent if you prefer
+                        sql_query: '' // You'll need to extract this if available
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.error("Feedback submission failed");
+                } else {
+                    const result = await response.json();
+                    console.log("Feedback result:", result);
+                }
+            } catch (error) {
+                console.error("Error submitting feedback:", error);
+            }
+        }
+    
+        function toggleTheme() {
+            const root = document.documentElement;
+            const isDarkTheme = getComputedStyle(root).getPropertyValue('--primary-color').trim() === '#101623';
+    
+            if (isDarkTheme) {
+                root.style.setProperty('--table-border-color', 'rgba(0, 0, 0, 0.1)');
+                root.style.setProperty('--text-color', '#333333');
+                root.style.setProperty('--subheading-color', '#555555');
+                root.style.setProperty('--placeholder-color', '#777777');
+                root.style.setProperty('--primary-color', '#ffffff');
+                root.style.setProperty('--secondary-color', '#f0f0f0');
+                root.style.setProperty('--secondary-hover-color', '#e0e0e0');
+                root.style.setProperty('--scrollbar-color', '#cccccc');
+                themeTogglerBtn.textContent = 'dark_mode';
+            } else {
+                root.style.setProperty('--table-border-color', 'rgba(255, 255, 255, 0.1)');
+                root.style.setProperty('--text-color', '#edf3ff');
+                root.style.setProperty('--subheading-color', '#97a7ca');
+                root.style.setProperty('--placeholder-color', '#c3cdde');
+                root.style.setProperty('--primary-color', '#101623');
+                root.style.setProperty('--secondary-color', '#283045');
+                root.style.setProperty('--secondary-hover-color', '#333e58');
+                root.style.setProperty('--scrollbar-color', '#626a7f');
+                themeTogglerBtn.textContent = 'light_mode';
+            }
+        }
+    
+        // Initial Load
+        if (userSection) {
+            fetchQuestions(userSection);
+            setupEventListeners();
         } else {
-            // Switch to dark theme
-            root.style.setProperty('--text-color', '#edf3ff');
-            root.style.setProperty('--subheading-color', '#97a7ca');
-            root.style.setProperty('--placeholder-color', '#c3cdde');
-            root.style.setProperty('--primary-color', '#101623');
-            root.style.setProperty('--secondary-color', '#283045');
-            root.style.setProperty('--secondary-hover-color', '#333e58');
-            root.style.setProperty('--scrollbar-color', '#626a7f');
-            themeTogglerBtn.textContent = 'light_mode';
+            displayErrorMessage("No section selected! Please log in again.");
         }
-    }
-
-    themeTogglerBtn.addEventListener('click', toggleTheme);
-
-
-
-
-    // Initial Load
-    if (userSection) {
-        fetchQuestions(userSection);
-        setupEventListeners();
-    } else {
-        displayErrorMessage("No section selected! Please log in again.");
-    }
-
-
-
-
-});
-
-
-
-
+    });
     </script>
   </body>
 </html>
