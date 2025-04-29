@@ -19,7 +19,7 @@ import os, time
 import nest_asyncio
 from io import BytesIO
 import openai
-
+from sqlalchemy.orm import sessionmaker
 from prompts import insight_prompt
 import chromadb
 from llama_index.core import VectorStoreIndex
@@ -34,6 +34,27 @@ from llama_index.core import Settings
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import json
 
+
+from fastapi import FastAPI, Form, HTTPException, Query, UploadFile, File
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.templating import Jinja2Templates
+from starlette.requests import Request
+from fastapi.staticfiles import StaticFiles
+import plotly.graph_objects as go
+import plotly.express as px
+from langchain_openai import ChatOpenAI
+import openai, yaml
+import base64
+from pydantic import BaseModel
+from io import BytesIO
+import os, csv
+import pandas as pd
+
+from langchain.chains.openai_tools import create_extraction_chain_pydantic
+from langchain_core.pydantic_v1 import Field
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from typing import Optional
 # Setup environment variables
 LLAMA_API_KEY = os.getenv("LLAMA_API_KEY")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -116,7 +137,33 @@ async def read_root(request: Request):
 from fastapi import FastAPI, HTTPException, Depends, status, Form
 import psycopg2
 from psycopg2 import sql
+class ChartRequest(BaseModel):
+    """
+    Pydantic model for chart generation requests.
+    """
+    table_name: str
+    x_axis: str
+    y_axis: str
+    chart_type: str
 
+    class Config:  # This ensures compatibility with FastAPI
+        json_schema_extra = {
+            "example": {
+                "table_name": "example_table",
+                "x_axis": "column1",
+                "y_axis": "column2",
+                "chart_type": "Line Chart"
+            }
+        }
+def download_as_excel(data: pd.DataFrame, filename: str = "data.xlsx"):
+    """
+    Converts a Pandas DataFrame to an Excel file and returns it as a stream.
+    """
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        data.to_excel(writer, index=False, sheet_name='Sheet1')
+    output.seek(0)
+    return output        
 def get_db_connection():
     try:
         conn = psycopg2.connect(
@@ -177,13 +224,13 @@ async def login(
             )
 
         user_id, full_name, role_name = user
+        print(full_name)
 
         # Redirect based on role
         if role_name == "reg-admin" or role_name == "audit-admin":
-            encoded_name = quote(full_name)
             encoded_section = quote(section)
             # return RedirectResponse(url=f"/admin?section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
-            return RedirectResponse(url=f"/role-select?name={encoded_name}&section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(url=f"/role-select?name={full_name}&section={encoded_section}", status_code=status.HTTP_303_SEE_OTHER)
             
         elif role_name == "reg-user" or role_name=="audit-user":
             # Use urllib.parse.quote to encode full_name and section
@@ -204,6 +251,82 @@ async def login(
         cur.close()
         conn.close()
 
+        
+def generate_chart_figure(data_df: pd.DataFrame, x_axis: str, y_axis: str, chart_type: str):
+    """
+    Generates a Plotly figure based on the specified chart type.
+    """
+    fig = None
+    if chart_type == "Line Chart":
+        fig = px.line(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Bar Chart":
+        fig = px.bar(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Scatter Plot":
+        fig = px.scatter(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Pie Chart":
+        fig = px.pie(data_df, names=x_axis, values=y_axis)
+    elif chart_type == "Histogram":
+        fig = px.histogram(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Box Plot":
+        fig = px.box(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Heatmap":
+        fig = px.density_heatmap(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Violin Plot":
+        fig = px.violin(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Area Chart":
+        fig = px.area(data_df, x=x_axis, y=y_axis)
+    elif chart_type == "Funnel Chart":
+        fig = px.funnel(data_df, x=x_axis, y=y_axis)
+    return fig
+
+@app.post("/generate-chart/")
+async def generate_chart(request: ChartRequest):
+    """
+    Generates a chart based on the provided request data.
+    """
+    try:
+        table_name = request.table_name
+        x_axis = request.x_axis
+        y_axis = request.y_axis
+        chart_type = request.chart_type
+
+        if "tables_data" not in globals() or table_name not in globals()["tables_data"]:
+            return JSONResponse(
+                content={"error": f"No data found for table {table_name}"},
+                status_code=404
+            )
+
+        data_df = globals()["tables_data"][table_name]
+        fig = generate_chart_figure(data_df, x_axis, y_axis, chart_type)
+
+        if fig:
+            return JSONResponse(content={"chart": fig.to_json()})
+        else:
+            return JSONResponse(content={"error": "Unsupported chart type selected."}, status_code=400)
+
+    except Exception as e:
+        return JSONResponse(
+            content={"error": f"An error occurred while generating the chart: {str(e)}"},
+            status_code=500
+        )
+
+@app.get("/download-table/")
+async def download_table(table_name: str):
+    """
+    Downloads a table as an Excel file.
+    """
+    if "tables_data" not in globals() or table_name not in globals()["tables_data"]:
+        raise HTTPException(status_code=404, detail=f"Table {table_name} data not found.")
+
+    data = globals()["tables_data"][table_name]
+    output = download_as_excel(data, filename=f"{table_name}.xlsx")
+
+    response = StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response.headers["Content-Disposition"] = f"attachment; filename={table_name}.xlsx"
+    return response
 @app.get("/role-select", response_class=HTMLResponse)
 async def user_page(request: Request):
     return templates.TemplateResponse("admin_landing_page.html", {"request": request})
@@ -246,6 +369,55 @@ async def user_more(request: Request):
         "tables": tables,        # Table dropdown based on database selection
         "question_dropdown": question_dropdown.split(','),  # Static questions from env
     })
+
+@app.post("/submit_feedback/")
+async def submit_feedback(request: Request):
+    data = await request.json() # Corrected for FastAPI
+    
+    table_name = data.get("table_name")
+    feedback_type = data.get("feedback_type")
+    user_query = data.get("user_query")
+    sql_query = data.get("sql_query")
+
+    if not table_name or not feedback_type:
+        return JSONResponse(content={"success": False, "message": "Table name and feedback type are required."}, status_code=400)
+
+    try:
+        # Create database connection
+        engine = create_engine(
+        f'postgresql+psycopg2://{quote_plus(db_user)}:{quote_plus(db_password)}@{db_host}:{db_port}/{db_database}'
+        )
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        # Sanitize input (Escape single quotes)
+        table_name = escape_single_quotes(table_name)
+        user_query = escape_single_quotes(user_query)
+        sql_query = escape_single_quotes(sql_query)
+        feedback_type = escape_single_quotes(feedback_type)
+
+        # Insert feedback into database
+        insert_query = f"""
+        INSERT INTO lz_feedbacks (department, user_query, sql_query, table_name, data, feedback_type, feedback)
+        VALUES ('unknown', :user_query, :sql_query, :table_name, 'no data', :feedback_type, 'user feedback')
+        """
+
+        session.execute(insert_query, {
+        "table_name": table_name,
+        "user_query": user_query,
+        "sql_query": sql_query,
+        "feedback_type": feedback_type
+        })
+
+        session.commit()
+        session.close()
+
+        return JSONResponse(content={"success": True, "message": "Feedback submitted successfully!"})
+
+    except Exception as e:
+        session.rollback()
+        session.close()
+        return JSONResponse(content={"success": False, "message": f"Error submitting feedback: {str(e)}"}, status_code=500)
 
 @app.post("/transcribe-audio/")
 async def transcribe_audio(file: UploadFile = File(...)):
