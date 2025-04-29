@@ -511,6 +511,9 @@ graph.add_node("intellidoc", intellidoc_node)
 # Add edges
 graph.add_edge(START, "classify_intent")
 
+def escape_single_quotes(input_string):
+    return input_string.replace("'","''")
+
 # Conditional edges based on intent and tool_selected
 def conditional_edges(state: GraphState):
     intent = state["intent"]
@@ -521,7 +524,7 @@ def conditional_edges(state: GraphState):
         if intent == "db_query":
             return "extract_tables"
         elif intent == "researcher":
-            return "researcher"
+            return "intellidoc"
         elif intent == "intellidoc":
             return "intellidoc"
     else:
@@ -546,3 +549,4 @@ graph.add_edge("generate_sql", "execute_sql")
 graph.add_edge("execute_sql", END)
 graph.add_edge("researcher", END)
 graph.add_edge("intellidoc", END)
+
