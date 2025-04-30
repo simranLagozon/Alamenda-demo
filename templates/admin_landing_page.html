@@ -46,29 +46,26 @@
         }
 
         .container {
-    /* Keep your existing properties */
-    max-width: 1200px;
-    margin: 0 auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    
-    /* Remove or reduce the top padding */
-    padding: 0rem 0rem 0rem 0rem; /* top, right, bottom, left */
-}
-.button-container {
-    display: flex
-;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    margin-right: -268px;
-    padding-top: 1rem;
-    width: 100%;
-    margin-top: 0px;
-}
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0rem 0rem 0rem 0rem;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-right: -268px;
+            padding-top: 1rem;
+            width: 100%;
+            margin-top: 0px;
+        }
 
         .welcome-container {
             text-align: center;
@@ -156,48 +153,62 @@
             background: var(--accent-hover);
         }
 
-        .back-button, .theme-toggle {
-    background-color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    padding: 8px;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: background-color 0.2s ease;
-}
+        .back-button, .theme-toggle, .logout-button {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            padding: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.back-button:hover, .theme-toggle:hover {
-    background-color: #f0f0f0;
-}
+        .logout-button {
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #333;
+            text-decoration: none;
+        }
 
+        .back-button:hover, .theme-toggle:hover, .logout-button:hover {
+            background-color: #f0f0f0;
+        }
 
-
-@media (max-width: 768px) {
-    .welcome-title {
-        font-size: 2rem;
-    }
-    
-    .welcome-subtitle {
-        font-size: 1rem;
-    }
-    
-    .role-cards {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .role-card {
-        width: 100%;
-        max-width: 350px;
-    }
-}
-</style>
-
+        @media (max-width: 768px) {
+            .welcome-title {
+                font-size: 2rem;
+            }
+            
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+            
+            .role-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .role-card {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
 <div class="container">
     <div class="button-container">
         <button class="back-button" id="backButton">
             <span class="material-icons-round">arrow_back</span>
+        </button>
+        <button class="logout-button" id="logoutButton">
+            <span class="material-icons-round" style="margin-right: 5px;">logout</span>
+            Logout
         </button>
         <button class="theme-toggle" id="themeToggle">
             <span class="material-icons-round theme-icon">dark_mode</span>
@@ -236,8 +247,15 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
         
         document.getElementById("backButton").addEventListener("click", function() {
-        window.history.back();
-    });
+            window.history.back();
+        });
+        
+        // Add logout button click handler (no logic for now)
+        document.getElementById("logoutButton").addEventListener("click", function() {
+            console.log("Logout clicked");
+            // Add logout logic here when needed
+        });
+        
         // Update icon based on current theme
         if (savedTheme === 'light') {
             themeIcon.textContent = 'dark_mode';
