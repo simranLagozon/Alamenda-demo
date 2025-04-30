@@ -604,7 +604,7 @@
                 <div class="logo-icon">
                     <i class="fas fa-file-contract"></i>
                 </div>
-                <span class="logo-text">InsightAgent.ai</span>
+                <span class="logo-text">ALLIANCEAI COMPLY</span>
             </div>
             
             <nav class="nav-menu">
@@ -732,13 +732,13 @@
                     </button>
                 </div>
                 <div class="file-upload-container">
-                    <input type="file" id="file-upload" class="file-upload-input" multiple accept=".pdf,.docx,.xlsx,.pptx">
+                    <input type="file" id="file-upload" class="file-upload-input" multiple accept=".pdf,.docx,.pptx,.txt,.html,.xml,.jpg,.jpeg,.png">
                     <label for="file-upload" class="file-upload-label">
                         <div class="file-upload-icon">
                             <i class="fas fa-cloud-upload-alt"></i>
                         </div>
                         <div class="file-upload-text">Drag & drop files here or click to browse</div>
-                        <div class="file-upload-subtext">Supports PDF, DOCX, XLSX, PPTX files</div>
+                        <div class="file-upload-subtext">Supports PDF, DOCX, PPTX, TXT, HTML, XML, JPG, JPEG, PNG files (max 100MB each)</div>
                     </label>
                     <div class="selected-files" id="selected-files-container"></div>
                 </div>
@@ -945,62 +945,108 @@
             });
 
             // Handle File Upload
-            actualUploadBtn.addEventListener('click', async () => {
-                const files = fileUpload.files;
+           // Handle File Upload
+actualUploadBtn.addEventListener('click', async () => {
+    const files = fileUpload.files;
+    const allowedTypes = ['application/pdf', 
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                         'text/plain',
+                         'text/html',
+                         'application/xml',
+                         'image/jpeg',
+                         'image/png'];
+    const allowedExtensions = ['.pdf', '.docx', '.pptx', '.txt', '.html', '.xml', '.jpg', '.jpeg', '.png'];
+    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
 
-                if (files.length === 0) {
-                    uploadResultDiv.innerHTML = `
-                        <div class="error-message">
-                            <i class="fas fa-exclamation-circle"></i>
-                            Please select files to upload.
-                        </div>
-                    `;
-                    return;
-                }
+    if (files.length === 0) {
+        uploadResultDiv.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                Please select files to upload.
+            </div>
+        `;
+        return;
+    }
 
-                const formData = new FormData();
-                formData.append('section', selectedSection);
-                
-                for (const file of files) {
-                    formData.append('files', file);
-                }
+    // Validate each file
+    let invalidFiles = [];
+    for (const file of files) {
+        // Check file size
+        if (file.size > maxSize) {
+            invalidFiles.push(`${file.name} (too large - max 100MB)`);
+            continue;
+        }
+        
+        // Check file extension
+        const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        if (!allowedExtensions.includes(fileExt)) {
+            invalidFiles.push(`${file.name} (invalid type)`);
+            continue;
+        }
+        
+        // Check MIME type (additional check)
+        if (!allowedTypes.includes(file.type) )
+        {
+            invalidFiles.push(`${file.name} (invalid type)`);
+        }
+    }
 
-                uploadResultDiv.innerHTML = '';
-                actualUploadBtn.innerHTML = '<span class="loading-spinner"></span> Uploading...';
-                actualUploadBtn.disabled = true;
+    if (invalidFiles.length > 0) {
+        uploadResultDiv.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                Invalid files detected:<br>
+                ${invalidFiles.join('<br>')}<br><br>
+                Only PDF, DOCX, PPTX, TXT, HTML, XML, JPG, JPEG, PNG files under 100MB are allowed.
+            </div>
+        `;
+        return;
+    }
 
-                try {
-                    const response = await fetch('/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    uploadResultDiv.innerHTML = `
-                        <div class="success-message">
-                            <i class="fas fa-check-circle"></i>
-                            ${data.message || 'Files uploaded successfully!'}
-                        </div>
-                    `;
-                    fileUpload.value = '';
-                    selectedFilesContainer.innerHTML = 'No files selected';
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    uploadResultDiv.innerHTML = `
-                        <div class="error-message">
-                            <i class="fas fa-exclamation-circle"></i>
-                            Error uploading files: ${error.message}
-                        </div>
-                    `;
-                } finally {
-                    actualUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Files';
-                    actualUploadBtn.disabled = false;
-                }
-            });
+    const formData = new FormData();
+    formData.append('section', selectedSection);
+    
+    for (const file of files) {
+        formData.append('files', file);
+    }
+
+    uploadResultDiv.innerHTML = '';
+    actualUploadBtn.innerHTML = '<span class="loading-spinner"></span> Uploading...';
+    actualUploadBtn.disabled = true;
+
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        uploadResultDiv.innerHTML = `
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                ${data.message || 'Files uploaded successfully!'}
+            </div>
+        `;
+        fileUpload.value = '';
+        selectedFilesContainer.innerHTML = 'No files selected';
+    } catch (error) {
+        console.error('Upload error:', error);
+        uploadResultDiv.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                Error uploading files: ${error.message}
+            </div>
+        `;
+    } finally {
+        actualUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Files';
+        actualUploadBtn.disabled = false;
+    }
+});
 
             // Show Delete Section
             deleteDocBtn.addEventListener('click', () => {
