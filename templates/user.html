@@ -249,9 +249,29 @@ body {
     overflow-wrap: break-word;
     /* white-space: pre-wrap; */
     display: inline-block;
-
-
 }
+
+.ai-message pre {
+    white-space: pre-wrap; /* Preserve line breaks but allow wrapping */
+    word-break: break-all; /* Break long words if needed */
+    overflow-x: auto; /* Add horizontal scroll if needed */
+    max-width: 100%;
+    padding: 8px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.user-message, .ai-message {
+    max-width: 90%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Specifically for SQL queries */
+.ai-message {
+    white-space: pre-wrap;
+}
+
 
 /* Loading indicator */
 .loading-indicator {
@@ -750,22 +770,31 @@ body {
 /* Like/Dislike buttons */
 .feedback-buttons {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-top: 10px;
+    align-items: center;
 }
 
 .feedback-btn {
     background: transparent;
     border: 1px solid var(--text-color);
     color: var(--text-color);
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 4px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    display: inline-flex;
+    
+    justify-content: center;
+    gap: 6px;
     font-size: 0.8rem;
     transition: all 0.3s ease;
+    line-height: 1.2;
+    height: 28px;
+    min-width: 80px;
+}
+
+.feedback-btn .material-symbols-rounded {
+    font-size: 1rem;
 }
 
 .feedback-btn:hover {
@@ -775,11 +804,23 @@ body {
 .feedback-btn.liked {
     border-color: #4CAF50;
     color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
 }
 
 .feedback-btn.disliked {
     border-color: #F44336;
     color: #F44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.sql-query {
+    font-family: monospace;
+    background: rgba(0,0,0,0.1);
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
     </style>
   </head>
@@ -887,8 +928,8 @@ body {
         document.body.appendChild(visualizationPanel);
     
         // ✅ Constants
-        // const API_BASE_URL = "http://127.0.0.1:8000";
-        const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
+        //const API_BASE_URL = "http://127.0.0.1:8000";
+         const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
     
 
     
@@ -1148,7 +1189,7 @@ body {
             }
     
             if (data.query) {
-                addMessageToChat("ai", `Generated SQL: <pre>${data.query}</pre><br> Insights: ${data.chat_insight}`);
+                addMessageToChat("ai", `Generated SQL: <div class="sql-query">${data.query}</div><br> Insights: ${data.chat_insight}`);
             }
     
             if (data.tables?.length > 0) {
