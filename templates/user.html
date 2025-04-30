@@ -567,11 +567,13 @@ body {
     background: var(--secondary-hover-color);
     border-color: rgba(255, 255, 255, 0.2);
 }
-
+/* Remove or update this existing rule */
 .back-button {
-    position: absolute;
+    /* Remove these properties */
+    /* position: absolute;
     top: 10px;
-    right: 20px;
+    right: 20px; */
+    /* Keep the rest */
     text-decoration: none;
     color: black;
     font-weight: 500;
@@ -822,6 +824,42 @@ body {
     white-space: pre-wrap;
     word-break: break-word;
 }
+/* Add this to your CSS */
+.header-buttons {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.back-button, .logout-button {
+    text-decoration: none;
+    color: black;
+    font-weight: 500;
+    background-color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.back-button:hover, .logout-button:hover {
+    background-color: #f0f0f0;
+}
+
+.logout-button {
+    background-color: #ff4444;
+    color: white;
+}
+
+.logout-button:hover {
+    background-color: #cc0000;
+    color: white;
+}
     </style>
   </head>
   <body>
@@ -850,10 +888,14 @@ body {
     <div class="container">
         <!-- App Header -->
         <header class="app-header">
-            <a href="javascript:history.back()" class="back-button" title="Go Back">
-                <span class="material-symbols-rounded">arrow_back</span> Back
-            </a>
-
+            <div class="header-buttons">
+                <a href="javascript:history.back()" class="back-button" title="Go Back">
+                    <span class="material-symbols-rounded">arrow_back</span> Back
+                </a>
+                <a href="/logout" class="logout-button" title="Logout">
+                    <span class="material-symbols-rounded">logout</span> Logout
+                </a>
+            </div>
             <h1 class="heading" id="greeting">Hello, there</h1>
             <h2 class="sub-heading">How Can I help you?</h2>
         </header>
@@ -929,7 +971,7 @@ body {
     
         // ✅ Constants
         //const API_BASE_URL = "http://127.0.0.1:8000";
-         const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
+        const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
     
 
     
