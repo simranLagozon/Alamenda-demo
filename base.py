@@ -436,6 +436,14 @@ def execute_sql(data: GraphState) -> dict:
         print(f"Executing SQL Query: {query}")
         with alchemyEngine.connect() as conn:
             df = pd.read_sql(sql=query, con=conn.connection)
+            # 👉 Format 'month' if it is a float (e.g., from EXTRACT(MONTH...))
+            if 'month' in df.columns:
+                if pd.api.types.is_float_dtype(df['month']):
+                    df['month'] = df['month'].astype(int)
+
+        # 👉 Format all datetime columns to show only date
+            for col in df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]']).columns:
+                    df[col] = df[col].dt.date
             tables_data[table] = df
             break  # Execute only once as in the original code
 
