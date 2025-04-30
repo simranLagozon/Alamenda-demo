@@ -1,4 +1,4 @@
 Table,Description
-audit_provider_company,"This table stores information about auditing companies, including the company's name and timestamps for when the record was created or updated."
-auditor,"This table stores information about auditors, including auditor names, their associated auditing company, and timestamps for record creation and updates."
-audit,"This table stores detailed information about audits conducted, including audit type, date, auditor details, department audited, source documents, compliance details, risk assessments, corrective action statuses, deadlines, AI-generated risk scores, and timestamps."
+al_audit_provider_company,"This table stores information about auditing companies, including the company's name and timestamps for when the record was created or updated."
+al_auditors,"This table stores information about auditors, including auditor names, their associated auditing company, and timestamps for record creation and updates."
+al_audit_details,"This table stores detailed information about audits conducted, including audit type, date, auditor details, department audited, source documents, compliance details, risk assessments, corrective action statuses, deadlines, AI-generated risk scores, and timestamps."
