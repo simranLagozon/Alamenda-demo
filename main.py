@@ -234,18 +234,25 @@ async def login(
 
         # Redirect based on role
         if role_name in ["reg-admin", "audit-admin"]:
-            encoded_name = quote(full_name)
-            encoded_section = quote(section)
-            return RedirectResponse(url=f"/role-select?name={encoded_name}&section={encoded_section}",
-                                 status_code=status.HTTP_303_SEE_OTHER)
-
-        elif role_name in ["reg-user", "audit-user"]:
-            encoded_name = quote(full_name)
+            # For audit-admin, use "audit admin" as the name
+            display_name = "Alameda Audit Admin" if role_name == "audit-admin" else full_name
+            encoded_name = quote(display_name)
             encoded_section = quote(section)
             return RedirectResponse(
-                url=f"/user_more?name={encoded_name}&section={encoded_section}",
+                url=f"/role-select?name={encoded_name}&section={encoded_section}",
                 status_code=status.HTTP_303_SEE_OTHER
-            )
+    )
+
+       
+        elif role_name in ["reg-user", "audit-user"]:
+                
+                display_name = full_name.replace("Tracking ", "") if role_name == "audit-user" else full_name
+                encoded_name = quote(display_name)
+                encoded_section = quote(section)
+                return RedirectResponse(
+                    url=f"/user_more?name={encoded_name}&section={encoded_section}",
+                    status_code=status.HTTP_303_SEE_OTHER
+        )
 
         else:
             raise HTTPException(
