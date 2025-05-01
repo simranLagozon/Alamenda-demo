@@ -859,6 +859,140 @@ body {
     background-color: #cc0000;
     color: white;
 }
+
+/* NEW SIDEBAR ACTION BUTTONS STYLES */
+.sidebar-actions {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(3px);
+}
+
+.action-btn .material-symbols-rounded {
+    font-size: 1.2rem;
+}
+
+.action-btn.schedule {
+    color: #8f6fff;
+}
+
+.action-btn.email {
+    color: #1d7efd;
+}
+
+.action-btn.faq {
+    color: #28a745;
+}
+
+/* MODAL STYLES FOR BUTTON ACTIONS */
+.action-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.action-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--primary-color);
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-title {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: var(--text-color);
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.modal-btn-primary {
+    background: #1d7efd;
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    background: #0264e3;
+}
+
+.modal-btn-secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.modal-btn-secondary:hover {
+    background: var(--secondary-hover-color);
+}
     </style>
   </head>
   <body>
@@ -870,6 +1004,21 @@ body {
             <span class="material-symbols-rounded">Edit</span>
             <span class="link-text">New Chat</span>
         </a>
+          <!-- NEW ACTION BUTTONS ADDED HERE -->
+          <div class="sidebar-actions">
+            <button class="action-btn schedule">
+                <span class="material-symbols-rounded">calendar_today</span>
+                <span class="link-text">Schedule</span>
+            </button>
+            <button class="action-btn email">
+                <span class="material-symbols-rounded">email</span>
+                <span class="link-text">Email</span>
+            </button>
+            <button class="action-btn faq">
+                <span class="material-symbols-rounded">help_outline</span>
+                <span class="link-text">Add to FAQs</span>
+            </button>
+        </div>
 
         <a href="#" class="settings-link" id="settings-link">
             <span class="material-symbols-rounded">settings</span>
@@ -877,9 +1026,9 @@ body {
         </a>
 
         <div id="settings-options">
-            <label><input type="radio" name="settings-option" id="option-intellidoc" value="intellidoc"> Document agent</label><br>
-            <label><input type="radio" name="settings-option" id="option-db-query" value="db_query">Database agent </label><br>
-            <label><input type="radio" name="settings-option" id="option-researcher" value="researcher"> Web agent</label><br>
+            <label><input type="checkbox" name="settings-option" id="option-intellidoc" value="intellidoc"> Document agent</label><br>
+            <label><input type="checkbox" name="settings-option" id="option-db-query" value="db_query">Database agent </label><br>
+            <label><input type="checkbox" name="settings-option" id="option-researcher" value="researcher"> Web agent</label><br>
             <label><input type="checkbox" id="option-all" value="all"> All</label>
         </div>
     </nav>
@@ -940,6 +1089,50 @@ body {
             <p class="disclaimer-text">XO can make mistakes, so double-check it</p>
         </div>
     </div>
+    
+    <!-- NEW MODALS FOR ACTION BUTTONS -->
+    <div class="action-modal" id="schedule-modal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h3 class="modal-title">Schedule Content</h3>
+            <div class="modal-body" id="schedule-modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary modal-close">Cancel</button>
+                <button class="modal-btn modal-btn-primary" id="confirm-schedule">Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-modal" id="email-modal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h3 class="modal-title">Email Content</h3>
+            <div class="modal-body" id="email-modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary modal-close">Cancel</button>
+                <button class="modal-btn modal-btn-primary" id="confirm-email">Send Email</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-modal" id="faq-modal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h3 class="modal-title">Add to FAQs</h3>
+            <div class="modal-body" id="faq-modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary modal-close">Cancel</button>
+                <button class="modal-btn modal-btn-primary" id="confirm-faq">Add to FAQs</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
 
