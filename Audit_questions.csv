@@ -1,8 +1,11 @@
 Questions,
 Which auditor handled the most high-risk audits,
+What is the distribution of severity levels (Low/Medium/High) across all audits?,
 Count audits by department,
+What is the trend of audit findings over time (by month/year)?,
 Which departments had more than 10 audits,
+Which audit types have the highest number of non-compliance issues?,
 Show audit counts grouped by audit type,
-Which department has the highest number of overdue audits
-
-
+Which department has the highest number of overdue audits,
+Which departments have the most overdue corrective actions?,
+How do corrective action statuses (Open/Closed/Overdue) vary by department?
