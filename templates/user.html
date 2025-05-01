@@ -20,20 +20,19 @@
 
 
 :root {
-    /* Dark theme colors */
-    --text-color: #edf3ff;
-    --subheading-color: #97a7ca;
-    --placeholder-color: #c3cdde;
-    --primary-color: #101623;
-    --secondary-color: #283045;
-    --secondary-hover-color: #333e58;
-    --scrollbar-color: #626a7f;
-        --sidebar-width: 250px;
-        --sidebar-collapsed-width: 70px;
-        --text-color: #edf3ff;
-        --secondary-color: #283045;
-        --secondary-hover-color: #333e58;
+    /* Light theme colors (default) */
+    --text-color: #333333;
+    --subheading-color: #555555;
+    --placeholder-color: #777777;
+    --primary-color: #ffffff;
+    --secondary-color: #f0f0f0;
+    --secondary-hover-color: #e0e0e0;
+    --scrollbar-color: #cccccc;
+    --table-border-color: rgba(0, 0, 0, 0.1);
+    --sidebar-width: 250px;
+    --sidebar-collapsed-width: 70px;
 }
+
 
 body {
     color: var(--text-color);
@@ -1819,32 +1818,37 @@ function addPaginationToVisualizationTable(uniqueId, table) {
             }
         }
     
-        function toggleTheme() {
-            const root = document.documentElement;
-            const isDarkTheme = getComputedStyle(root).getPropertyValue('--primary-color').trim() === '#101623';
+    function toggleTheme() {
+    const root = document.documentElement;
+    const isDarkTheme = getComputedStyle(root).getPropertyValue('--primary-color').trim() === '#ffffff';
     
-            if (isDarkTheme) {
-                root.style.setProperty('--table-border-color', 'rgba(0, 0, 0, 0.1)');
-                root.style.setProperty('--text-color', '#333333');
-                root.style.setProperty('--subheading-color', '#555555');
-                root.style.setProperty('--placeholder-color', '#777777');
-                root.style.setProperty('--primary-color', '#ffffff');
-                root.style.setProperty('--secondary-color', '#f0f0f0');
-                root.style.setProperty('--secondary-hover-color', '#e0e0e0');
-                root.style.setProperty('--scrollbar-color', '#cccccc');
-                themeTogglerBtn.textContent = 'dark_mode';
-            } else {
-                root.style.setProperty('--table-border-color', 'rgba(255, 255, 255, 0.1)');
-                root.style.setProperty('--text-color', '#edf3ff');
-                root.style.setProperty('--subheading-color', '#97a7ca');
-                root.style.setProperty('--placeholder-color', '#c3cdde');
-                root.style.setProperty('--primary-color', '#101623');
-                root.style.setProperty('--secondary-color', '#283045');
-                root.style.setProperty('--secondary-hover-color', '#333e58');
-                root.style.setProperty('--scrollbar-color', '#626a7f');
-                themeTogglerBtn.textContent = 'light_mode';
-            }
-        }
+    if (isDarkTheme) {
+        // Switch to dark theme
+        root.style.setProperty('--table-border-color', 'rgba(255, 255, 255, 0.1)');
+        root.style.setProperty('--text-color', '#edf3ff');
+        root.style.setProperty('--subheading-color', '#97a7ca');
+        root.style.setProperty('--placeholder-color', '#c3cdde');
+        root.style.setProperty('--primary-color', '#101623');
+        root.style.setProperty('--secondary-color', '#283045');
+        root.style.setProperty('--secondary-hover-color', '#333e58');
+        root.style.setProperty('--scrollbar-color', '#626a7f');
+        themeTogglerBtn.textContent = 'light_mode';
+    } else {
+        // Switch to light theme (default)
+        root.style.setProperty('--table-border-color', 'rgba(0, 0, 0, 0.1)');
+        root.style.setProperty('--text-color', '#333333');
+        root.style.setProperty('--subheading-color', '#555555');
+        root.style.setProperty('--placeholder-color', '#777777');
+        root.style.setProperty('--primary-color', '#ffffff');
+        root.style.setProperty('--secondary-color', '#f0f0f0');
+        root.style.setProperty('--secondary-hover-color', '#e0e0e0');
+        root.style.setProperty('--scrollbar-color', '#cccccc');
+        themeTogglerBtn.textContent = 'dark_mode';
+    }
+}
+
+// Initialize theme toggler button to dark mode icon (since we start in light mode)
+themeTogglerBtn.textContent = 'dark_mode';
     
         // Initial Load
         if (userSection) {
