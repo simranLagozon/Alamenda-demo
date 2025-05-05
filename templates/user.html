@@ -517,9 +517,11 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     display: none;
     z-index: 1000;
-    bottom: 60px;
-    left: 20px;
-    font-size: 0.85rem;
+    /* Remove bottom positioning */
+    top: auto; /* Reset top */
+    bottom: 100%; /* Position above the button */
+    left: 0;
+    transform: none; /* Remove any transforms */
 }
 
 #settings-options.show {
@@ -1182,7 +1184,7 @@ body {
         // ✅ Constants
         //const API_BASE_URL = "http://127.0.0.1:8000";
         const API_BASE_URL = "https://alameda-demo-ahf5ghfkfpgeb4gw.centralindia-01.azurewebsites.net";
-    
+       // const API_BASE_URL = "https://alameda-demo-sandbox-esaxc5epgae0cueg.centralindia-01.azurewebsites.net";
 
     
         let isSubmitting = false;
@@ -1216,24 +1218,34 @@ body {
             sidebarHeader.addEventListener("click", () => sidebar.classList.toggle("collapsed"));
         }
     
+        
         // Settings Dropdown
-        if (settingsLink && settingsOptions) {
-            settingsLink.addEventListener("click", function (e) {
-                e.preventDefault();
-                const rect = this.getBoundingClientRect();
-                settingsOptions.style.display = "block";
-                settingsOptions.style.top = `${rect.top - settingsOptions.offsetHeight - 10}px`;
-                settingsOptions.style.left = `${rect.left}px`;
-                settingsOptions.classList.toggle("show");
-            });
-    
-            document.addEventListener("click", (e) => {
-                if (!settingsLink.contains(e.target) && !settingsOptions.contains(e.target)) {
-                    settingsOptions.classList.remove("show");
-                    settingsOptions.style.display = "none";
-                }
-            });
+
+        // Settings Dropdown
+if (settingsLink && settingsOptions) {
+    settingsLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Calculate position relative to the settings link
+        const linkRect = this.getBoundingClientRect();
+        
+        if (settingsOptions.style.display === "block") {
+            settingsOptions.style.display = "none";
+        } else {
+            // Position above the settings link
+            settingsOptions.style.display = "block";
+            settingsOptions.style.bottom = `${window.innerHeight - linkRect.top + 10}px`;
+            settingsOptions.style.left = `${linkRect.left}px`;
         }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!settingsLink.contains(e.target) && !settingsOptions.contains(e.target)) {
+            settingsOptions.style.display = "none";
+        }
+    });
+}
         
         // Theme Toggler
         themeTogglerBtn.addEventListener("click", toggleTheme);
