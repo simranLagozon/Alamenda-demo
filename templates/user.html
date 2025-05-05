@@ -1150,7 +1150,25 @@ body {
         const themeTogglerBtn = document.getElementById("theme-toggler-btn");
         const deleteChatsBtn = document.getElementById("new-chat-btn");
         const recordAudioBtn = document.getElementById("record-audio-btn");
+        const toolCheckboxes = document.querySelectorAll('input[name="settings-option"]');  
         
+        allCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                toolCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+        });
+        
+        // When any individual tool is selected, deselect "All"
+        toolCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    allCheckbox.checked = false;
+                }
+            });
+        });
+
         // Create overlay and visualization panel elements
         const overlay = document.createElement("div");
         overlay.id = "overlay";
