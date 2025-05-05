@@ -86,9 +86,14 @@ def classify_intent(state: GraphState) -> str:
     llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
     user_question = state["messages"][-1].content
 
-    # FIX: Use correct key name "selected_tools"
-    tool_selected = state.get("selected_tools", ["all"])  # ✅ Changed key
-
+    # Get selected tools - can be multiple now
+    tool_selected = state.get("selected_tools", ["all"])
+    
+    # If "all" is selected, use all tools
+    if "all" in tool_selected:
+        available_tools = ["intellidoc", "db_query", "researcher"]
+    else:
+        available_tools = tool_selected
 
     intent_prompt = f"""You are an intent classifier. Your job is to determine which agent is most appropriate to answer the user's question.
     The possible agents are:
@@ -101,17 +106,15 @@ def classify_intent(state: GraphState) -> str:
     """
 
     # Add a note about available tools
-    if "all" not in tool_selected:
-        available_tools = ", ".join(tool_selected)
-        intent_prompt += f"\nNote: Only the following agents are available: {available_tools}."
+    intent_prompt += f"\nNote: Only the following agents are available: {', '.join(available_tools)}."
 
     intent_chain = RunnablePassthrough() | llm | StrOutputParser()
     intent = intent_chain.invoke([HumanMessage(content=intent_prompt)]).strip().lower()
 
     # Validate the intent against the selected tools
-    if "all" not in tool_selected and intent not in tool_selected:
-        # If the intent is not in the selected tools, default to the first tool in the list
-        intent = tool_selected[0]
+    if intent not in available_tools:
+        # If the intent is not in the selected tools, use the first available tool
+        intent = available_tools[0]
 
     print(f"Intent Classification: {intent}")
     return intent
@@ -532,7 +535,7 @@ def conditional_edges(state: GraphState):
         if intent == "db_query":
             return "extract_tables"
         elif intent == "researcher":
-            return "intellidoc"
+            return "researcher"
         elif intent == "intellidoc":
             return "intellidoc"
     else:
@@ -548,7 +551,7 @@ def conditional_edges(state: GraphState):
             # If the intent is not in the selected tools, default to the first tool in the list
             return tool_selected[0]
 
-    return END  # Default to end if no matching intent
+    return END  # Default to end if no matching intent# Default to end if no matching intent
 
 graph.add_conditional_edges("classify_intent", conditional_edges)
 
