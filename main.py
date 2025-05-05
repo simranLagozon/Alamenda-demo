@@ -613,30 +613,35 @@ async def submit_query(
     session_state['messages'].append({"role": "user", "content": prompt})
 
     try:
+        # If no tools selected, default to all
+        if not tool_selected:
+            tool_selected = ["all"]
+        
+        # If "all" is selected, use all available tools
+        if "all" in tool_selected:
+            tool_selected = ["intellidoc", "db_query", "researcher"]
+
         result = invoke_chain(
-            prompt, session_state['messages'], "gpt-4o-mini", selected_subject, tool_selected
+            prompt, 
+            session_state['messages'], 
+            "gpt-4o-mini", 
+            selected_subject, 
+            tool_selected
         )
 
         response_data = {
             "user_query": session_state['user_query'],
-            "follow_up_questions": {}  # Initialize as empty
+            "follow_up_questions": {},
+            "intent": result.get("intent", ""),
+            "selected_tools": tool_selected
         }
 
-        # Extract follow-up questions from all messages
-        if "messages" in result:
-            for message in result["messages"]:
-                if hasattr(message, 'content'):
-                    content = message.content
-                    print(f"Message content for follow-up extraction: {content}")  # Debug
-                    follow_ups = extract_follow_ups(content)
-                    if follow_ups:
-                        response_data["follow_up_questions"].update(follow_ups)
-
-        # Handle different intents
+        # Handle different response types based on intent
         if result["intent"] == "db_query":
             session_state['generated_query'] = result.get("SQL_Statement", "")
             session_state['chosen_tables'] = result.get("chosen_tables", [])
             session_state['tables_data'] = result.get("tables_data", {})
+            
             tables_html = []
             for table_name, data in session_state['tables_data'].items():
                 html_table = display_table_with_styles(data, table_name)
@@ -644,35 +649,53 @@ async def submit_query(
                     "table_name": table_name,
                     "table_html": html_table,
                 })
+
             chat_insight = None
             if result["chosen_tables"]:
-
                 insights_prompt = insight_prompt.format(
                     sql_query=result["SQL_Statement"],
                     table_data=result["tables_data"]
                 )
-
                 chat_insight = llm.invoke(insights_prompt).content
 
             response_data.update({
                 "query": session_state['generated_query'],
                 "tables": tables_html,
-                "chat_insight":chat_insight
+                "chat_insight": chat_insight
             })
 
-        
         elif result["intent"] == "researcher":
             response_data["search_results"] = result.get("search_results", "No results found.")
+            if "messages" in result:
+                for message in result["messages"]:
+                    if hasattr(message, 'content'):
+                        response_data["search_results"] = message.content
 
         elif result["intent"] == "intellidoc":
             response_data["search_results"] = result.get("search_results", "No results found.")
+            if "messages" in result:
+                for message in result["messages"]:
+                    if hasattr(message, 'content'):
+                        response_data["search_results"] = message.content
 
-        print(f"Final response data with follow-ups: {response_data}")  # Debug
+        # Extract follow-up questions from all messages
+        if "messages" in result:
+            for message in result["messages"]:
+                if hasattr(message, 'content'):
+                    content = message.content
+                    follow_ups = extract_follow_ups(content)
+                    if follow_ups:
+                        response_data["follow_up_questions"].update(follow_ups)
+
+        print(f"Final response data: {response_data}")
         return JSONResponse(content=response_data)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing the prompt: {str(e)}")
-
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing the prompt: {str(e)}"
+        )
+        
 @app.get("/get_table_data/")
 async def get_table_data(
     table_name: str = Query(...),
