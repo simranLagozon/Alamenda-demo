@@ -185,7 +185,7 @@ async def add_to_faqs(data: QueryInput):
     if not query:
         raise HTTPException(status_code=400, detail="Invalid query!")
 
-    blob_name = 'table_files/Regulatory_questions.csv'
+    blob_name = 'Regulatory_questions.csv'
 
     try:
         # Get the blob client
@@ -429,7 +429,7 @@ async def user_more(request: Request):
     tables = []
 
     # Pass dynamically populated dropdown options to the template
-    return templates.TemplateResponse("user.html", {
+    return templates.TemplateResponse("user_sb.html", {
         "request": request,
         "models": models,
         "databases": databases,  # Dynamically populated database dropdown
@@ -519,8 +519,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
     except Exception as e:
         return JSONResponse(content={"error": f"Error transcribing audio: {str(e)}"}, status_code=500)
 
-
-@app.get("/get_questions")
+@app.get("/get_questions/")
 async def get_questions(subject: str):
     """
     Fetches questions from a CSV file in Azure Blob Storage based on the selected subject.
@@ -531,7 +530,7 @@ async def get_questions(subject: str):
     Returns:
         JSONResponse: A JSON response containing the list of questions or an error message.
     """
-    csv_file_name = f"table_files/{subject}_questions.csv"
+    csv_file_name = f"{subject}_questions.csv"
     blob_client = blob_service_client.get_blob_client(container=AZURE_CONTAINER_NAME, blob=csv_file_name)
 
     try:
