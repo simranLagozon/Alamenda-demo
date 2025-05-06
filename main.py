@@ -16,6 +16,7 @@ from starlette.requests import Request
 from fastapi.responses import JSONResponse
 from typing import List
 import os, time
+from io import BytesIO, StringIO
 import nest_asyncio
 from io import BytesIO
 import openai
@@ -99,7 +100,13 @@ from urllib.parse import quote
 # Set up static files and templates
 app.mount("/stats", StaticFiles(directory="stats"), name="stats")
 templates = Jinja2Templates(directory="templates")
-# Re-raise the exception to prevent the app from starting
+try:
+    blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+    print("Blob service client initialized successfully.")
+except Exception as e:
+    print(f"Error initializing BlobServiceClient: {e}")
+    # Handle the error appropriately, possibly exiting the application
+    raise  # Re-raise the exception to prevent the app from starting
 
 # Initialize OpenAI API key and model
 
@@ -162,11 +169,11 @@ class QueryInput(BaseModel):
     Pydantic model for user query input.
     """
     query: str
-@app.post("/add_to_faqs/")
 @app.post("/add_to_faqs")
+@app.post("/add_to_faqs/")
 async def add_to_faqs(data: QueryInput):
     """
-    Adds a user query to the FAQ CSV file.
+    Adds a user query to the FAQ CSV file on Azure Blob Storage.
 
     Args:
         data (QueryInput): The user query.
@@ -175,16 +182,30 @@ async def add_to_faqs(data: QueryInput):
         JSONResponse: A JSON response indicating success or failure.
     """
     query = data.query.strip()
-
     if not query:
         raise HTTPException(status_code=400, detail="Invalid query!")
 
-    try:
-        with open('table_files\Regulatory_questions.csv', mode='a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow([query])
+    blob_name = 'table_files/Regulatory_questions.csv'
 
-        return {"message": "Query added to FAQs successfully!"}
+    try:
+        # Get the blob client
+        blob_client = blob_service_client.get_blob_client(container=AZURE_CONTAINER_NAME, blob=blob_name)
+
+        try:
+            # Download the blob content
+            blob_content = blob_client.download_blob().content_as_text()
+        except ResourceNotFoundError:
+            # If the blob doesn't exist, create a new one with a header if needed
+            blob_content = "question\n"  # Replace with your actual header
+
+        # Append the new query to the existing CSV content
+        updated_csv_content = blob_content + f"{query}\n"  # Append new query
+
+        # Upload the updated CSV content back to Azure Blob Storage
+        blob_client.upload_blob(updated_csv_content.encode('utf-8'), overwrite=True)
+
+        return {"message": "Query added to FAQs successfully and uploaded to Azure Blob Storage!"}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
@@ -499,27 +520,46 @@ async def transcribe_audio(file: UploadFile = File(...)):
         return JSONResponse(content={"error": f"Error transcribing audio: {str(e)}"}, status_code=500)
 
 
-@app.get("/get_questions/")
+@app.get("/get_questions")
 async def get_questions(subject: str):
-    """Fetch questions from the selected subject's CSV file."""
-    csv_file = f"{subject}_questions.csv"
-    if not os.path.exists(csv_file):
-        return JSONResponse(
-            content={"error": f"The file {csv_file} does not exist."}, status_code=404
-        )
+    """
+    Fetches questions from a CSV file in Azure Blob Storage based on the selected subject.
+
+    Args:
+        subject (str): The subject to fetch questions for.
+
+    Returns:
+        JSONResponse: A JSON response containing the list of questions or an error message.
+    """
+    csv_file_name = f"table_files/{subject}_questions.csv"
+    blob_client = blob_service_client.get_blob_client(container=AZURE_CONTAINER_NAME, blob=csv_file_name)
 
     try:
-        # Read the questions from the CSV
-        questions_df = pd.read_csv(csv_file)
+        # Check if the blob exists
+        if not blob_client.exists():
+            print(f"file not found {csv_file_name}")
+            return JSONResponse(
+                content={"error": f"The file {csv_file_name} does not exist."}, status_code=404
+            )
+
+        # Download the blob content
+        blob_content = blob_client.download_blob().content_as_text()
+
+        # Read the CSV content
+        questions_df = pd.read_csv(StringIO(blob_content))
+        
         if "question" in questions_df.columns:
             questions = questions_df["question"].tolist()
         else:
             questions = questions_df.iloc[:, 0].tolist()
+
         return {"questions": questions}
+
     except Exception as e:
         return JSONResponse(
             content={"error": f"An error occurred while reading the file: {str(e)}"}, status_code=500
         )
+
 @app.get("/get-tables/")
 async def get_tables(selected_section: str):
     # Fetch table details for the selected section
