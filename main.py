@@ -74,12 +74,20 @@ openai_ef = OpenAIEmbeddingFunction(api_key=os.getenv("OPENAI_API_KEY"), model_n
 AZURE_CONTAINER_NAME = os.getenv("AZURE_CONTAINER_NAME")
 AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 
+
 app = FastAPI()
 
 # Set up static files and templates
 app.mount("/stats", StaticFiles(directory="stats"), name="stats")
 templates = Jinja2Templates(directory="templates")
-
+# Initialize the BlobServiceClient
+try:
+    blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+    print("Blob service client initialized successfully.")
+except Exception as e:
+    print(f"Error initializing BlobServiceClient: {e}")
+    # Handle the error appropriately, possibly exiting the application
+    raise  # Re-raise the exception to prevent the app from starting
 # Initialize OpenAI API key and model
 
 question_dropdown = os.getenv('Question_dropdown')
@@ -155,6 +163,50 @@ class ChartRequest(BaseModel):
                 "chart_type": "Line Chart"
             }
         }
+class QueryInput(BaseModel):
+    """
+    Pydantic model for user query input.
+    """
+    query: str
+@app.post("/add_to_faqs")
+async def add_to_faqs(data: QueryInput):
+    """
+    Adds a user query to the FAQ CSV file on Azure Blob Storage.
+
+    Args:
+        data (QueryInput): The user query.
+
+    Returns:
+        JSONResponse: A JSON response indicating success or failure.
+    """
+    query = data.query.strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Invalid query!")
+
+    blob_name = 'table_files/Demo_questions.csv'
+
+    try:
+        # Get the blob client
+        blob_client = blob_service_client.get_blob_client(container=AZURE_CONTAINER_NAME, blob=blob_name)
+
+        try:
+            # Download the blob content
+            blob_content = blob_client.download_blob().content_as_text()
+        except ResourceNotFoundError:
+            # If the blob doesn't exist, create a new one with a header if needed
+            blob_content = "question\n"  # Replace with your actual header
+
+        # Append the new query to the existing CSV content
+        updated_csv_content = blob_content + f"{query}\n"  # Append new query
+
+        # Upload the updated CSV content back to Azure Blob Storage
+        blob_client.upload_blob(updated_csv_content.encode('utf-8'), overwrite=True)
+
+        return {"message": "Query added to FAQs successfully and uploaded to Azure Blob Storage!"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 def download_as_excel(data: pd.DataFrame, filename: str = "data.xlsx"):
     """
     Converts a Pandas DataFrame to an Excel file and returns it as a stream.
@@ -234,25 +286,18 @@ async def login(
 
         # Redirect based on role
         if role_name in ["reg-admin", "audit-admin"]:
-            # For audit-admin, use "audit admin" as the name
-            display_name = "Alameda Audit Admin" if role_name == "audit-admin" else full_name
-            encoded_name = quote(display_name)
+            encoded_name = quote(full_name)
+            encoded_section = quote(section)
+            return RedirectResponse(url=f"/role-select?name={encoded_name}&section={encoded_section}",
+                                 status_code=status.HTTP_303_SEE_OTHER)
+
+        elif role_name in ["reg-user", "audit-user"]:
+            encoded_name = quote(full_name)
             encoded_section = quote(section)
             return RedirectResponse(
-                url=f"/role-select?name={encoded_name}&section={encoded_section}",
+                url=f"/user_more?name={encoded_name}&section={encoded_section}",
                 status_code=status.HTTP_303_SEE_OTHER
-    )
-
-       
-        elif role_name in ["reg-user", "audit-user"]:
-                
-                display_name = full_name.replace("Tracking ", "") if role_name == "audit-user" else full_name
-                encoded_name = quote(display_name)
-                encoded_section = quote(section)
-                return RedirectResponse(
-                    url=f"/user_more?name={encoded_name}&section={encoded_section}",
-                    status_code=status.HTTP_303_SEE_OTHER
-        )
+            )
 
         else:
             raise HTTPException(
@@ -613,35 +658,30 @@ async def submit_query(
     session_state['messages'].append({"role": "user", "content": prompt})
 
     try:
-        # If no tools selected, default to all
-        if not tool_selected:
-            tool_selected = ["all"]
-        
-        # If "all" is selected, use all available tools
-        if "all" in tool_selected:
-            tool_selected = ["intellidoc", "db_query", "researcher"]
-
         result = invoke_chain(
-            prompt, 
-            session_state['messages'], 
-            "gpt-4o-mini", 
-            selected_subject, 
-            tool_selected
+            prompt, session_state['messages'], "gpt-4o-mini", selected_subject, tool_selected
         )
 
         response_data = {
             "user_query": session_state['user_query'],
-            "follow_up_questions": {},
-            "intent": result.get("intent", ""),
-            "selected_tools": tool_selected
+            "follow_up_questions": {}  # Initialize as empty
         }
 
-        # Handle different response types based on intent
+        # Extract follow-up questions from all messages
+        if "messages" in result:
+            for message in result["messages"]:
+                if hasattr(message, 'content'):
+                    content = message.content
+                    print(f"Message content for follow-up extraction: {content}")  # Debug
+                    follow_ups = extract_follow_ups(content)
+                    if follow_ups:
+                        response_data["follow_up_questions"].update(follow_ups)
+
+        # Handle different intents
         if result["intent"] == "db_query":
             session_state['generated_query'] = result.get("SQL_Statement", "")
             session_state['chosen_tables'] = result.get("chosen_tables", [])
             session_state['tables_data'] = result.get("tables_data", {})
-            
             tables_html = []
             for table_name, data in session_state['tables_data'].items():
                 html_table = display_table_with_styles(data, table_name)
@@ -649,53 +689,35 @@ async def submit_query(
                     "table_name": table_name,
                     "table_html": html_table,
                 })
-
             chat_insight = None
             if result["chosen_tables"]:
+
                 insights_prompt = insight_prompt.format(
                     sql_query=result["SQL_Statement"],
                     table_data=result["tables_data"]
                 )
+
                 chat_insight = llm.invoke(insights_prompt).content
 
             response_data.update({
                 "query": session_state['generated_query'],
                 "tables": tables_html,
-                "chat_insight": chat_insight
+                "chat_insight":chat_insight
             })
 
+        
         elif result["intent"] == "researcher":
             response_data["search_results"] = result.get("search_results", "No results found.")
-            if "messages" in result:
-                for message in result["messages"]:
-                    if hasattr(message, 'content'):
-                        response_data["search_results"] = message.content
 
         elif result["intent"] == "intellidoc":
             response_data["search_results"] = result.get("search_results", "No results found.")
-            if "messages" in result:
-                for message in result["messages"]:
-                    if hasattr(message, 'content'):
-                        response_data["search_results"] = message.content
 
-        # Extract follow-up questions from all messages
-        if "messages" in result:
-            for message in result["messages"]:
-                if hasattr(message, 'content'):
-                    content = message.content
-                    follow_ups = extract_follow_ups(content)
-                    if follow_ups:
-                        response_data["follow_up_questions"].update(follow_ups)
-
-        print(f"Final response data: {response_data}")
+        print(f"Final response data with follow-ups: {response_data}")  # Debug
         return JSONResponse(content=response_data)
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Error processing the prompt: {str(e)}"
-        )
-        
+        raise HTTPException(status_code=500, detail=f"Error processing the prompt: {str(e)}")
+
 @app.get("/get_table_data/")
 async def get_table_data(
     table_name: str = Query(...),
