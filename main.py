@@ -168,8 +168,8 @@ class QueryInput(BaseModel):
     Pydantic model for user query input.
     """
     query: str
-@app.post("/add_to_faqs")
 @app.post("/add_to_faqs/")
+@app.post("/add_to_faqs")
 async def add_to_faqs(data: QueryInput):
     """
     Adds a user query to the FAQ CSV file on Azure Blob Storage.
