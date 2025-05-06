@@ -429,7 +429,7 @@ async def user_more(request: Request):
     tables = []
 
     # Pass dynamically populated dropdown options to the template
-    return templates.TemplateResponse("user_sb.html", {
+    return templates.TemplateResponse("user.html", {
         "request": request,
         "models": models,
         "databases": databases,  # Dynamically populated database dropdown
