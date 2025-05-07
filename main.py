@@ -4,6 +4,7 @@ from langchain.memory import ChatMessageHistory
 from langchain_openai import ChatOpenAI
 from base import *
 from dotenv import load_dotenv
+from io import BytesIO, StringIO
 from state import session_state
 load_dotenv()  # Load environment variables from .env file
 from typing import Optional
@@ -13,10 +14,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
+from tempfile import NamedTemporaryFile
+import shutil
 from fastapi.responses import JSONResponse
 from typing import List
 import os, time
-from io import BytesIO, StringIO
 import nest_asyncio
 from io import BytesIO
 import openai
@@ -93,13 +95,9 @@ class Table(BaseModel):
 
 
 
-from urllib.parse import quote  
+from urllib.parse import quote
 
-
-
-# Set up static files and templates
-app.mount("/stats", StaticFiles(directory="stats"), name="stats")
-templates = Jinja2Templates(directory="templates")
+# Initialize the BlobServiceClient
 try:
     blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
     print("Blob service client initialized successfully.")
@@ -107,6 +105,10 @@ except Exception as e:
     print(f"Error initializing BlobServiceClient: {e}")
     # Handle the error appropriately, possibly exiting the application
     raise  # Re-raise the exception to prevent the app from starting
+
+# Set up static files and templates
+app.mount("/stats", StaticFiles(directory="stats"), name="stats")
+templates = Jinja2Templates(directory="templates")
 
 # Initialize OpenAI API key and model
 
@@ -137,9 +139,9 @@ async def read_root(request: Request):
         "tables": tables,        # Table dropdown based on database selection
         "question_dropdown": question_dropdown.split(','),  # Static questions from env
     })
-    
-    
-    
+
+
+
 
 
 from fastapi import FastAPI, HTTPException, Depends, status, Form
@@ -163,12 +165,200 @@ class ChartRequest(BaseModel):
                 "chart_type": "Line Chart"
             }
         }
-        
+def download_as_excel(data: pd.DataFrame, filename: str = "data.xlsx"):
+    """
+    Converts a Pandas DataFrame to an Excel file and returns it as a stream.
+    """
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        data.to_excel(writer, index=False, sheet_name='Sheet1')
+    output.seek(0)
+    return output
+def get_db_connection():
+    try:
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_database,
+            user=db_user,
+            password=db_password
+        )
+        # Check if the connection is successful
+        conn.cursor().execute("SELECT 1")
+        print("Database connection established successfully.")
+        return conn
+    except psycopg2.Error as e:
+        print(f"Error connecting to the database: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to connect to the database"
+        )
+
+get_db_connection()
+class TemporaryDocumentHandler:
+    def _init_(self):
+        self.temp_index = None
+        self.uploaded_files = []
+        self.parser_choice = "LlamaParse"  # Default parser
+
+    async def handle_upload(self, files: List[UploadFile], parser_choice: str):
+        """Handle temporary file uploads and create index."""
+        try:
+            self.parser_choice = parser_choice
+            self.uploaded_files = files
+
+            if files:
+                temp_documents = []
+                parsed_text = []
+
+                for uploaded_file in files:
+                    if parser_choice == "LlamaParse":
+                        file_content = await uploaded_file.read()
+                        result_text = await self.use_llamaparse(file_content, uploaded_file.filename)
+                        parsed_text.append(result_text)
+                    else:
+                        # Save file temporarily for unstructured parser
+                        with NamedTemporaryFile(delete=False) as temp_file:
+                            shutil.copyfileobj(uploaded_file.file, temp_file)
+                            temp_file_path = temp_file.name
+
+                        result_text = await self.use_unstructured(temp_file_path)
+                        parsed_text.append(result_text)
+                        os.unlink(temp_file_path)  # Clean up temp file
+
+                # Split text into chunks
+                TEMP_CHUNK_SIZE = os.getenv("TEMP_CHUNK_SIZE", 1000)
+                chunk_size = int(TEMP_CHUNK_SIZE)
+                for text in parsed_text:
+                    text_chunks = [
+                        text[i:i + chunk_size]
+                        for i in range(0, len(text), chunk_size)
+                    ]
+                    for chunk in text_chunks:
+                        document = Document(text=chunk)
+                        temp_documents.append(document)
+
+                # Create index
+                self.temp_index = VectorStoreIndex.from_documents(
+                    temp_documents,
+                    embed_model=Settings.embed_model
+                )
+
+                return {"status": "success", "message": "Files processed successfully"}
+
+            return {"status": "error", "message": "No files uploaded"}
+
+        except Exception as e:
+            return {"status": "error", "message": f"Error processing files: {str(e)}"}
+
+    async def query_index(self, question: str):
+        """Query the temporary index with a question."""
+        if not self.temp_index:
+            return {"status": "error", "message": "No index available - please upload documents first"}
+
+        try:
+            # Set up retriever
+            retriever = self.temp_index.as_retriever(similarity_top_k=3)
+
+            # Retrieve relevant nodes
+            retrieved_nodes = retriever.retrieve(question)
+            context_str = "\n\n".join([
+                r.get_content().replace("{", "").replace("}", "")[:4000]
+                for r in retrieved_nodes
+            ])
+
+            # Format QA prompt
+            qa_prompt_str = QA_PROMPT_STR  # Define this constant or get from env
+            fmt_qa_prompt = qa_prompt_str.format(
+                context_str=context_str,
+                query_str=question
+            )
+
+            # Prepare messages
+            chat_text_qa_msgs = [
+                ChatMessage(role=MessageRole.SYSTEM, content=LLM_INSTRUCTION),
+                ChatMessage(role=MessageRole.USER, content=fmt_qa_prompt),
+            ]
+            text_qa_template = ChatPromptTemplate(chat_text_qa_msgs)
+
+            # Query the index
+            result = self.temp_index.as_query_engine(
+                text_qa_template=text_qa_template,
+                llm=llm
+            ).query(question)
+
+            if result:
+                return {
+                    "status": "success",
+                    "response": result.response,
+                    "context": context_str
+                }
+            else:
+                return {"status": "error", "message": "No response generated"}
+
+        except Exception as e:
+            return {"status": "error", "message": f"Error querying index: {str(e)}"}
+
+    async def use_llamaparse(self, file_content: bytes, file_name: str):
+        """Parse file using LlamaParse."""
+        try:
+            with open(file_name, "wb") as f:
+                f.write(file_content)
+
+            parser = LlamaParse(
+                result_type='text',
+                verbose=True,
+                language="en",
+                num_workers=2
+            )
+            documents = await parser.aload_data([file_name])
+            os.remove(file_name)
+
+            return " ".join([doc.text for doc in documents])
+
+        except Exception as e:
+            raise Exception(f"LlamaParse error: {str(e)}")
+
+    async def use_unstructured(self, file_path: str):
+        """Parse file using Unstructured.io."""
+        try:
+            # Implement your unstructured.io parsing logic here
+            # This is a placeholder - replace with actual implementation
+            with open(file_path, "r") as f:
+                return f.read()
+        except Exception as e:
+            raise Exception(f"Unstructured.io error: {str(e)}")
+
+# Initialize the handler
+temp_doc_handler = TemporaryDocumentHandler()
+
+# API Endpoints
+@app.post("/upload-temp-docs")
+async def upload_temp_docs(
+    files: List[UploadFile] = File(...),
+    parser_choice: str = Form("LlamaParse")
+):
+    """Endpoint for uploading temporary documents."""
+    result = await temp_doc_handler.handle_upload(files, parser_choice)
+    return JSONResponse(result)
+
+@app.post("/query-temp-docs")
+async def query_temp_docs(
+    question: str = Form(...)
+):
+    """Endpoint for querying temporary documents."""
+    result = await temp_doc_handler.query_index(question)
+    return JSONResponse(result)
 class QueryInput(BaseModel):
     """
     Pydantic model for user query input.
     """
     query: str
+@app.post("/clear-temp-docs")
+async def clear_temp_docs():
+    """Endpoint for clearing temporary documents."""
+    temp_doc_handler.temp_index = None
+    temp_doc_handler.uploaded_files = []
+    return JSONResponse({"status": "success", "message": "Temporary documents cleared"})
 @app.post("/add_to_faqs")
 @app.post("/add_to_faqs/")
 async def add_to_faqs(data: QueryInput):
@@ -194,7 +384,7 @@ async def add_to_faqs(data: QueryInput):
         try:
             # Download the blob content
             blob_content = blob_client.download_blob().content_as_text()
-        except ResourceNotFoundError:
+        except Exception as e:
             # If the blob doesn't exist, create a new one with a header if needed
             blob_content = "question\n"  # Replace with your actual header
 
@@ -208,39 +398,6 @@ async def add_to_faqs(data: QueryInput):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
-
-
-def download_as_excel(data: pd.DataFrame, filename: str = "data.xlsx"):
-    """
-    Converts a Pandas DataFrame to an Excel file and returns it as a stream.
-    """
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        data.to_excel(writer, index=False, sheet_name='Sheet1')
-    output.seek(0)
-    return output        
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(
-            host=db_host,
-            database=db_database,
-            user=db_user,
-            password=db_password
-        )
-        # Check if the connection is successful
-        conn.cursor().execute("SELECT 1")
-        print("Database connection established successfully.")
-        return conn
-    except psycopg2.Error as e:
-        print(f"Error connecting to the database: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to connect to the database"
-        )
-
-get_db_connection()
-
-# Login endpoint
 # Login endpoint
 @app.post("/login")
 async def login(
@@ -289,25 +446,18 @@ async def login(
 
         # Redirect based on role
         if role_name in ["reg-admin", "audit-admin"]:
-            # For audit-admin, use "audit admin" as the name
-            display_name = "Alameda Audit Admin" if role_name == "audit-admin" else full_name
-            encoded_name = quote(display_name)
+            encoded_name = quote(full_name)
+            encoded_section = quote(section)
+            return RedirectResponse(url=f"/role-select?name={encoded_name}&section={encoded_section}",
+                                 status_code=status.HTTP_303_SEE_OTHER)
+
+        elif role_name in ["reg-user", "audit-user"]:
+            encoded_name = quote(full_name)
             encoded_section = quote(section)
             return RedirectResponse(
-                url=f"/role-select?name={encoded_name}&section={encoded_section}",
+                url=f"/user_more?name={encoded_name}&section={encoded_section}",
                 status_code=status.HTTP_303_SEE_OTHER
-    )
-
-       
-        elif role_name in ["reg-user", "audit-user"]:
-                
-                display_name = full_name.replace("Tracking ", "") if role_name == "audit-user" else full_name
-                encoded_name = quote(display_name)
-                encoded_section = quote(section)
-                return RedirectResponse(
-                    url=f"/user_more?name={encoded_name}&section={encoded_section}",
-                    status_code=status.HTTP_303_SEE_OTHER
-        )
+            )
 
         else:
             raise HTTPException(
@@ -319,7 +469,7 @@ async def login(
         cur.close()
         conn.close()
 
-        
+
 def generate_chart_figure(data_df: pd.DataFrame, x_axis: str, y_axis: str, chart_type: str):
     """
     Generates a Plotly figure based on the specified chart type.
@@ -441,7 +591,7 @@ async def user_more(request: Request):
 @app.post("/submit_feedback/")
 async def submit_feedback(request: Request):
     data = await request.json() # Corrected for FastAPI
-    
+
     table_name = data.get("table_name")
     feedback_type = data.get("feedback_type")
     user_query = data.get("user_query")
@@ -499,7 +649,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
         JSONResponse: A JSON response containing the transcription or an error message.
     """
     try:
-        
+
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise HTTPException(status_code=500, detail="Missing OpenAI API Key.")
@@ -513,13 +663,12 @@ async def transcribe_audio(file: UploadFile = File(...)):
             file=audio_bio
         )
 
-        # Fix: Access `transcript.text` instead of treating it as a dictionary
+        # Fix: Access transcript.text instead of treating it as a dictionary
         return {"transcription": transcript.text}
 
     except Exception as e:
         return JSONResponse(content={"error": f"Error transcribing audio: {str(e)}"}, status_code=500)
-
-@app.get("/get_questions/")
+@app.get("/get_questions")
 async def get_questions(subject: str):
     """
     Fetches questions from a CSV file in Azure Blob Storage based on the selected subject.
@@ -546,7 +695,7 @@ async def get_questions(subject: str):
 
         # Read the CSV content
         questions_df = pd.read_csv(StringIO(blob_content))
-        
+
         if "question" in questions_df.columns:
             questions = questions_df["question"].tolist()
         else:
@@ -558,7 +707,27 @@ async def get_questions(subject: str):
         return JSONResponse(
             content={"error": f"An error occurred while reading the file: {str(e)}"}, status_code=500
         )
+# @app.get("/get_questions/")
+# async def get_questions(subject: str):
+#     """Fetch questions from the selected subject's CSV file."""
+#     csv_file = f"{subject}_questions.csv"
+#     if not os.path.exists(csv_file):
+#         return JSONResponse(
+#             content={"error": f"The file {csv_file} does not exist."}, status_code=404
+#         )
 
+#     try:
+#         # Read the questions from the CSV
+#         questions_df = pd.read_csv(csv_file)
+#         if "question" in questions_df.columns:
+#             questions = questions_df["question"].tolist()
+#         else:
+#             questions = questions_df.iloc[:, 0].tolist()
+#         return {"questions": questions}
+#     except Exception as e:
+#         return JSONResponse(
+#             content={"error": f"An error occurred while reading the file: {str(e)}"}, status_code=500
+#         )
 @app.get("/get-tables/")
 async def get_tables(selected_section: str):
     # Fetch table details for the selected section
@@ -599,7 +768,7 @@ def invoke_chain(question, messages, selected_model, selected_subject, selected_
                 history.add_user_message(message["content"])
             else:
                 history.add_ai_message(message["content"])
-        
+
         runner = graph.compile()
         result = runner.invoke({
             'question': question,
@@ -608,21 +777,21 @@ def invoke_chain(question, messages, selected_model, selected_subject, selected_
             'selected_subject': selected_subject,
             'selected_tools': selected_tools
         })
-        
+
         print(f"Result from runner.invoke:", result)
-        
+
         # Initialize response with common fields
         response = {
             "messages": result.get("messages", []),
             "follow_up_questions": {}
         }
-        
+
         # Extract follow-up questions from all messages
         for message in result.get("messages", []):
             if hasattr(message, 'content'):
                 content = message.content
                 # Try to extract JSON from code block
-                json_match = re.search(r'```json\n({.*?})\n```', content, re.DOTALL)
+                json_match = re.search(r'json\n({.*?})\n', content, re.DOTALL)
                 if json_match:
                     try:
                         data = json.loads(json_match.group(1))
@@ -631,7 +800,7 @@ def invoke_chain(question, messages, selected_model, selected_subject, selected_
                                 response["follow_up_questions"][key] = value
                     except json.JSONDecodeError as e:
                         print(f"Error parsing JSON from message: {e}")
-        
+
         # Handle different intents
         if result.get("SQL_Statement"):
             print("Intent Classification: db_query")
@@ -656,7 +825,7 @@ def invoke_chain(question, messages, selected_model, selected_subject, selected_
                     "intent": "unknown",
                     "message": "This intent is not yet implemented."
                 })
-        
+
         print("Final response with follow-ups:", response)
         return response
 
@@ -666,7 +835,7 @@ def invoke_chain(question, messages, selected_model, selected_subject, selected_
             "error": str(e),
             "message": "Insufficient information to generate SQL Query."
         }
-    
+
 @app.post("/submit")
 async def submit_query(
     section: str = Form(...),
@@ -686,35 +855,30 @@ async def submit_query(
     session_state['messages'].append({"role": "user", "content": prompt})
 
     try:
-        # If no tools selected, default to all
-        if not tool_selected:
-            tool_selected = ["all"]
-        
-        # If "all" is selected, use all available tools
-        if "all" in tool_selected:
-            tool_selected = ["intellidoc", "db_query", "researcher"]
-
         result = invoke_chain(
-            prompt, 
-            session_state['messages'], 
-            "gpt-4o-mini", 
-            selected_subject, 
-            tool_selected
+            prompt, session_state['messages'], "gpt-4o-mini", selected_subject, tool_selected
         )
 
         response_data = {
             "user_query": session_state['user_query'],
-            "follow_up_questions": {},
-            "intent": result.get("intent", ""),
-            "selected_tools": tool_selected
+            "follow_up_questions": {}  # Initialize as empty
         }
 
-        # Handle different response types based on intent
+        # Extract follow-up questions from all messages
+        if "messages" in result:
+            for message in result["messages"]:
+                if hasattr(message, 'content'):
+                    content = message.content
+                    print(f"Message content for follow-up extraction: {content}")  # Debug
+                    follow_ups = extract_follow_ups(content)
+                    if follow_ups:
+                        response_data["follow_up_questions"].update(follow_ups)
+
+        # Handle different intents
         if result["intent"] == "db_query":
             session_state['generated_query'] = result.get("SQL_Statement", "")
             session_state['chosen_tables'] = result.get("chosen_tables", [])
             session_state['tables_data'] = result.get("tables_data", {})
-            
             tables_html = []
             for table_name, data in session_state['tables_data'].items():
                 html_table = display_table_with_styles(data, table_name)
@@ -722,53 +886,35 @@ async def submit_query(
                     "table_name": table_name,
                     "table_html": html_table,
                 })
-
             chat_insight = None
             if result["chosen_tables"]:
+
                 insights_prompt = insight_prompt.format(
                     sql_query=result["SQL_Statement"],
                     table_data=result["tables_data"]
                 )
+
                 chat_insight = llm.invoke(insights_prompt).content
 
             response_data.update({
                 "query": session_state['generated_query'],
                 "tables": tables_html,
-                "chat_insight": chat_insight
+                "chat_insight":chat_insight
             })
+
 
         elif result["intent"] == "researcher":
             response_data["search_results"] = result.get("search_results", "No results found.")
-            if "messages" in result:
-                for message in result["messages"]:
-                    if hasattr(message, 'content'):
-                        response_data["search_results"] = message.content
 
         elif result["intent"] == "intellidoc":
             response_data["search_results"] = result.get("search_results", "No results found.")
-            if "messages" in result:
-                for message in result["messages"]:
-                    if hasattr(message, 'content'):
-                        response_data["search_results"] = message.content
 
-        # Extract follow-up questions from all messages
-        if "messages" in result:
-            for message in result["messages"]:
-                if hasattr(message, 'content'):
-                    content = message.content
-                    follow_ups = extract_follow_ups(content)
-                    if follow_ups:
-                        response_data["follow_up_questions"].update(follow_ups)
-
-        print(f"Final response data: {response_data}")
+        print(f"Final response data with follow-ups: {response_data}")  # Debug
         return JSONResponse(content=response_data)
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Error processing the prompt: {str(e)}"
-        )
-        
+        raise HTTPException(status_code=500, detail=f"Error processing the prompt: {str(e)}")
+
 @app.get("/get_table_data/")
 async def get_table_data(
     table_name: str = Query(...),
@@ -816,7 +962,7 @@ async def get_table_data(
 
 
 class Session:
-    def _init_(self):
+    def init(self):
         self.data = {}
 
     def get(self, key, default=None):
@@ -828,7 +974,7 @@ class Session:
     def pop(self, key, default=None):
         return self.data.pop(key, default)
 
-    def _contains_(self, item):
+    def contains(self, item):
         return item in self.data
 
     def items(self):
@@ -840,7 +986,7 @@ class Session:
     def values(self):
         return self.data.values()
 
-    def _iter_(self):
+    def iter(self):
         return iter(self.data)
 session = Session()
 
@@ -921,8 +1067,8 @@ def upload_to_blob_storage(
                     blob_client = container_client.get_blob_client(blob_name)
 
                     print(f"Uploading {file_name} to {blob_name}...")
-                    blob_client.upload_blob(file_content, overwrite=True)        
-        
+                    blob_client.upload_blob(file_content, overwrite=True)
+
 
 
 @app.post("/upload")
@@ -948,7 +1094,7 @@ async def upload_files(
 
         if files:
             # logging.info(f"Handling upload for collection: {collection}, DB Path: {db_path}")
-            
+
             for file in files:
                 file_content = await file.read()
                 file_name = file.filename
@@ -1080,14 +1226,14 @@ def extract_follow_ups(message_content):
     """Extract follow-up questions from the message content."""
     try:
         # Try to find JSON in code block first
-        json_match = re.search(r'```json\n({.*?})\n```', message_content, re.DOTALL)
+        json_match = re.search(r'json\n({.*?})\n', message_content, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group(1))
             return {
-                k: v for k, v in data.items() 
+                k: v for k, v in data.items()
                 if k.startswith('follow_up_') and v and isinstance(v, str)
             }
-        
+
         # If no code block, try parsing the whole content as JSON
         try:
             data = json.loads(message_content)
@@ -1097,7 +1243,7 @@ def extract_follow_ups(message_content):
             }
         except json.JSONDecodeError:
             return {}
-            
+
     except Exception as e:
         print(f"Error extracting follow-ups: {e}")
         return {}
@@ -1172,7 +1318,7 @@ async def show_documents(request: Request,
         logging.info(f"Documents retrieved successfully for collection: {collection_name}")
         return doc_list
 
-       
+
 
     except Exception as e:
         logging.error(f"Error showing documents: {e}")
@@ -1196,7 +1342,7 @@ async def delete_document(request: Request,
         # Initialize the collection
         collection = init_chroma_collection(db_path, collection_name)
         print("document to be deleted",doc_name)
-        
+
         if doc_name:
               def delete_from_blob_storage(connect_str: str, container_name: str, file_name: str,collection_name):
                     # Create a BlobServiceClient to interact with the Azure Blob Storage
@@ -1244,11 +1390,11 @@ async def delete_document(request: Request,
                         AZURE_CONTAINER_NAME,
                         doc_name,
                         collection_name )
-        
-      
-        
+
+
+
         if ids_to_delete:
-            
+
             # Attempt deletio
             collection.delete(ids=ids_to_delete)
 
