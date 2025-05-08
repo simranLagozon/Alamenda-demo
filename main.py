@@ -375,7 +375,7 @@ async def add_to_faqs(data: QueryInput):
     if not query:
         raise HTTPException(status_code=400, detail="Invalid query!")
 
-    blob_name = 'Regulatory_questions.csv'
+    blob_name = f"{subject}_questions.csv"
 
     try:
         # Get the blob client
