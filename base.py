@@ -314,7 +314,7 @@ def intellidoc_tool(department: str, query_text: str):
 
     except Exception as e:
         logging.error(f"Error in intellidoc_tool: {e}")
-        return query_text, f"Error processing query: {str(e)}", ""
+        return query_text, "Failed to process your request. Please try again from relevant department.", ""
 
 
 # Define the intellidoc node
